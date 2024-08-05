@@ -1,6 +1,7 @@
 # solidity
 
 1. [solidity 基础](./basic.md)
+2. [solidity 进阶](./advance.md)
 
 ## 学习资料
 

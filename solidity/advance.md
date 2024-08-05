@@ -620,3 +620,194 @@ function delegatecallSetVars(address _addr, uint _num) external payable{
     );
 }
 ```
+
+## 9. solidity 在合约中创建新合约
+
+在以太坊上，用户（外部账户，EOA）可以创建智能合约，智能合约同样也可以创建新的智能合约。去中心化交易所uniswap就是利用工厂合约（`PairFactory`）创建了无数个币对合约（pair）。
+
+### `create`
+
+有两种方法可以在合约中创建新合约，`create`和`create2`
+
+`create`的用法很简单，就是`new`一个合约，并传入新合约构造函数所需的参数：
+
+```js
+Contract x = new Contract{value: _value}(params)
+```
+
+其中`Contract`是要创建的合约名，`x`是合约对象（地址），如果构造函数是`payable`，可以创建时转入`_value`数量的ETH，`params`是新合约构造函数的参数。
+
+### 极简Uniswap
+
+`Uniswap V2`[核心合约](https://github.com/Uniswap/v2-core/tree/master/contracts)中包含两个合约：
+
+1. UniswapV2Pair：币对合约，用于管理币对地址、流动性、买卖
+2. UniswapV2Factory：工厂合约，用于创建新的币对，并管理币对地址
+
+下面我们用`create`方法实现一个极简版的`Uniswap`：`Pair`币对合约负责管理币对地址，`PairFactory`工厂合约用于创建新的币对，并管理币对地址。
+
+#### `Pair`合约
+
+```js
+contract Pair {
+    address public factory; // 工厂合约地址
+    address public token0;  // 代币1
+    address public token1;  // 代币2
+
+    constructor() payable {
+        factory = msg.sender;
+    }
+
+    // called once by the factory at time of deployment
+    function initialize(address _token0, address _token1) external {
+        require(msg.sender == factory, 'UniswapV2: FORBIDDEN'); // sufficient check
+        token0 = _token0;
+        token1 = _token1;
+    }
+}
+```
+
+`Pair`合约很简单，包含3个状态变量：`factory`,`token0`,`token1`
+
+构造函数`constructor`在部署时将`factory`赋值为工厂合约地址。`initialize`函数会由工厂合约在部署完成后手动调用以初始化代币地址，将`token0`和`token1`更新为币对中两种代币的地址。
+
+#### `PairFactory`
+
+```js
+contract PairFactory {
+    mapping(address => mapping(address => address)) public getPair; // 通过两个代币地址查Pair地址
+    address[] public allPairs; // 保存所有Pair地址
+
+    function createPair(address tokenA, address tokenB) external returns(address pairAddr) {
+        // 创建新Pair合约
+        Pair pair = new Pair();
+        // 调用新合约的initialize方法
+        pair.initialize(tokenA, tokenB);
+        // 更新地址mapping
+        pairAddr = address(pair);
+        allPairs.push(pairAddr);
+        getPair[tokenA][tokenB] = pairAddr;
+        getPair[tokenB][tokenA] = pairAddr;
+    }
+}
+```
+
+工厂合约（`PairFactory`）有两个状态变量`getPair`是两个代币地址到币对地址的mapping，方便根据代币找到币对地址；`allPairs`是币对地址的数组，存储了所有代币对的地址。
+
+`PairFactory`合约只有一个`createPair`函数，根据输入的两个代币地址`tokenA`和`tokenB`来创建新的`Pair`合约。
+
+## 10. solidity Create2
+
+`create2`在智能合约部署在以太坊网络之前就能够预测合约地址
+
+### `create`如何计算地址
+
+智能合约可以由其他合约和普通账户利用`create`操作码创建。在这两种情况下，新合约的地址都以相同的方式计算：创建者的地址（通常为部署的钱包地址或者合约地址）和`nonce`（该地址发送交易的总数，对于合约账户是创建的合约总数，每创建一个合约nonce+1）的哈希。
+
+```js
+新地址 = hash(创建者地址, nonce)
+```
+
+创建者地址不会变，但`nonce`可能会随着时间而改变，因此用`create`创建的合约地址不好预测。
+
+### `create2`如何计算地址
+
+`create2`的目的是为了让合约地址独立于未来的时间。不管未来区块链上发生了什么，你都可以把合约部署在事先计算好的地址上。用`create2`创建的合约地址由4个部分决定：
+
+- `0xFF`：一个常数，避免和`create`冲突
+- `CreatorAddress`：调用`create2`的当前合约（创建合约）地址
+- `salt`（盐）：一个创建者指定的`bytes32`类型的值，它的主要目的是用来影响新创建的合约的地址
+- `initcode`：新合约的初始字节码（合约的Creation Code和构造函数的参数）
+
+```js
+新地址 = hash("0xFF", 创建者地址, salt, initcode)
+```
+
+### 如何使用`create2`
+
+`create2`的用法和`create`类似，同样是`new`一个合约，并传入新合约构造函数所需的参数，只不过要多传一个`salt`参数：
+
+```js
+Contract x = new Contract{salt: _salt, value: _value}(params);
+```
+
+其中`Contract`是要创建的合约名，`x`是合约对象（地址），`_salt`是指定的盐；如果构造函数是`payable`，可以创建时转入`_value`数量的ETH，`params`是新合约构造函数的参数。
+
+### 极简Uniswap2
+
+#### `Pair`
+
+```js
+contract Pair {
+    address public factory;
+    address public token0;
+    address public token1;
+
+    constructor() payable{
+        factory = msg.sender;
+    }
+
+    function initialize(address _token0, address _token1) external {
+        require(msg.sender == factory, 'UniswapV2: FORBIDDEN');
+        token0 = _token0;
+        token1 = _token1;
+    }
+}
+```
+
+`Pair`合约很简单，包含3个状态变量：`factory`,`token0`,`token1`
+
+构造函数`constructor`在部署时将`factory`赋值为工厂合约地址。`initialize`函数会在`Pair`合约创建的时候被工厂合约调用一次，将`token0`和`token1`更新为币对中两种代币的地址。
+
+#### `PairFactory2`
+
+```js
+contract PairFactory2{
+    mapping(address => mapping(address => address)) public getPair; // 通过两个代币地址查Pair地址
+    address[] public allPairs; // 保存所有Pair地址
+
+    function createPair2(address tokenA, address tokenB) external returns (address pairAddr) {
+        require(tokenA != tokenB, 'IDENTICAL_ADDRESSES'); //避免tokenA和tokenB相同产生的冲突
+        // 用tokenA和tokenB地址计算salt
+        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA); //将tokenA和tokenB按大小排序
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1));
+        // 用create2部署新合约
+        Pair pair = new Pair{salt: salt}();
+        // 调用新合约的initialize方法
+        pair.initialize(tokenA, tokenB);
+        // 更新地址map
+        pairAddr = address(pair);
+        allPairs.push(pairAddr);
+        getPair[tokenA][tokenB] = pairAddr;
+        getPair[tokenB][tokenA] = pairAddr;
+    }
+}
+```
+
+工厂合约（`PairFactory2`）有两个状态变量`getPair`是两个代币地址到币对地址的`mapping`，方便根据代币找到币对地址；`allPairs`是币对地址的数组，存储了所有币对地址。
+
+`PairFactory2`合约只有一个`createPair2`函数，使用`create2`根据输入的两个代币地址`tokenA`和`tokenB`来创建新的`Pair`合约。
+
+#### 事先计算`Pair`地址
+
+```js
+// 提前计算pair合约地址
+function calculateAddr(address tokenA, address tokenB) public view returns(address predictedAddress){
+    require(tokenA != tokenB, 'IDENTICAL_ADDRESSES'); //避免tokenA和tokenB相同产生的冲突
+    // 计算用tokenA和tokenB地址计算salt
+    (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA); //将tokenA和tokenB按大小排序
+    bytes32 salt = keccak256(abi.encodePacked(token0, token1));
+    // 计算合约地址方法 hash()
+    predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
+        bytes1(0xff),
+        address(this),
+        salt,
+        keccak256(type(Pair).creationCode)
+        )))));
+}
+```
+
+### create2的实际应用场景
+
+1. 交易所为新用户预留创建钱包合约地址
+2. 由`create2`驱动的`factory`合约，在`Uniswap V2`中交易对的创建是在`factory`中调用`create2`完成。这样的好处是：它可以得到一个确定的`pair`地址，使得`router`中就可以通过`(tokenA, tokenB)`计算出`pair`地址，不再需要执行一次`Factory.getPair(tokenA, tokenB)`的跨合约调用
