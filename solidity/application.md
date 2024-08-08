@@ -2089,3 +2089,595 @@ interface IERC1155Receiver is IERC165 {
 - `uri()`：返回`ERC1155`的第`id`种代币存储元数据的网址，类似`ERC721的tokenURI`。
 - `baseURI()`：返回`baseURI`，`uri`就是把`baseURI`和`id`拼接在一起，需要开发重写。
 
+```js
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "./IERC1155.sol";
+import "./IERC1155Receiver.sol";
+import "./IERC1155MetadataURI.sol";
+import "https://github.com/AmazingAng/WTF-Solidity/blob/main/34_ERC721/Address.sol";
+import "https://github.com/AmazingAng/WTF-Solidity/blob/main/34_ERC721/String.sol";
+import "https://github.com/AmazingAng/WTF-Solidity/blob/main/34_ERC721/IERC165.sol";
+
+/**
+ * @dev ERC1155多代币标准
+ * 见 https://eips.ethereum.org/EIPS/eip-1155
+ */
+contract ERC1155 is IERC165, IERC1155, IERC1155MetadataURI {
+    using Address for address; // 使用Address库，用isContract来判断地址是否为合约
+    using Strings for uint256; // 使用String库
+    // Token名称
+    string public name;
+    // Token代号
+    string public symbol;
+    // 代币种类id 到 账户account 到 余额balances 的映射
+    mapping(uint256 => mapping(address => uint256)) private _balances;
+    // address 到 授权地址 的批量授权映射
+    mapping(address => mapping(address => bool)) private _operatorApprovals;
+
+    /**
+     * 构造函数，初始化`name` 和`symbol`, uri_
+     */
+    constructor(string memory name_, string memory symbol_) {
+        name = name_;
+        symbol = symbol_;
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
+    }
+
+    /**
+     * @dev 持仓查询 实现IERC1155的balanceOf，返回account地址的id种类代币持仓量。
+     */
+    function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
+        require(account != address(0), "ERC1155: address zero is not a valid owner");
+        return _balances[id][account];
+    }
+
+    /**
+     * @dev 批量持仓查询
+     * 要求:
+     * - `accounts` 和 `ids` 数组长度相等.
+     */
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
+        public view virtual override
+        returns (uint256[] memory)
+    {
+        require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
+        uint256[] memory batchBalances = new uint256[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
+        }
+        return batchBalances;
+    }
+
+    /**
+     * @dev 批量授权，调用者授权operator使用其所有代币
+     * 释放{ApprovalForAll}事件
+     * 条件：msg.sender != operator
+     */
+    function setApprovalForAll(address operator, bool approved) public virtual override {
+        require(msg.sender != operator, "ERC1155: setting approval status for self");
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
+    }
+
+    /**
+     * @dev 查询批量授权.
+     */
+    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
+        return _operatorApprovals[account][operator];
+    }
+
+    /**
+     * @dev 安全转账，将`amount`单位的`id`种类代币从`from`转账到`to`
+     * 释放 {TransferSingle} 事件.
+     * 要求:
+     * - to 不能是0地址.
+     * - from拥有足够的持仓量，且调用者拥有授权
+     * - 如果 to 是智能合约, 他必须支持 IERC1155Receiver-onERC1155Received.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public virtual override {
+        address operator = msg.sender;
+        // 调用者是持有者或是被授权
+        require(
+            from == operator || isApprovedForAll(from, operator),
+            "ERC1155: caller is not token owner nor approved"
+        );
+        require(to != address(0), "ERC1155: transfer to the zero address");
+        // from地址有足够持仓
+        uint256 fromBalance = _balances[id][from];
+        require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
+        // 更新持仓量
+        unchecked {
+            _balances[id][from] = fromBalance - amount;
+        }
+        _balances[id][to] += amount;
+        // 释放事件
+        emit TransferSingle(operator, from, to, id, amount);
+        // 安全检查
+        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);    
+    }
+
+    /**
+     * @dev 批量安全转账，将`amounts`数组单位的`ids`数组种类代币从`from`转账到`to`
+     * 释放 {TransferSingle} 事件.
+     * 要求:
+     * - to 不能是0地址.
+     * - from拥有足够的持仓量，且调用者拥有授权
+     * - 如果 to 是智能合约, 他必须支持 IERC1155Receiver-onERC1155BatchReceived.
+     * - ids和amounts数组长度相等
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public virtual override {
+        address operator = msg.sender;
+        // 调用者是持有者或是被授权
+        require(
+            from == operator || isApprovedForAll(from, operator),
+            "ERC1155: caller is not token owner nor approved"
+        );
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(to != address(0), "ERC1155: transfer to the zero address");
+
+        // 通过for循环更新持仓  
+        for (uint256 i = 0; i < ids.length; ++i) {
+            uint256 id = ids[i];
+            uint256 amount = amounts[i];
+
+            uint256 fromBalance = _balances[id][from];
+            require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
+            unchecked {
+                _balances[id][from] = fromBalance - amount;
+            }
+            _balances[id][to] += amount;
+        }
+
+        emit TransferBatch(operator, from, to, ids, amounts);
+        // 安全检查
+        _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);    
+    }
+
+    /**
+     * @dev 铸造
+     * 释放 {TransferSingle} 事件.
+     */
+    function _mint(
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual {
+        require(to != address(0), "ERC1155: mint to the zero address");
+
+        address operator = msg.sender;
+
+        _balances[id][to] += amount;
+        emit TransferSingle(operator, address(0), to, id, amount);
+
+        _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
+    }
+
+    /**
+     * @dev 批量铸造
+     * 释放 {TransferBatch} 事件.
+     */
+    function _mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual {
+        require(to != address(0), "ERC1155: mint to the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+
+        address operator = msg.sender;
+
+        for (uint256 i = 0; i < ids.length; i++) {
+            _balances[ids[i]][to] += amounts[i];
+        }
+
+        emit TransferBatch(operator, address(0), to, ids, amounts);
+
+        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
+    }
+
+    /**
+     * @dev 销毁
+     */
+    function _burn(
+        address from,
+        uint256 id,
+        uint256 amount
+    ) internal virtual {
+        require(from != address(0), "ERC1155: burn from the zero address");
+
+        address operator = msg.sender;
+
+        uint256 fromBalance = _balances[id][from];
+        require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
+        unchecked {
+            _balances[id][from] = fromBalance - amount;
+        }
+
+        emit TransferSingle(operator, from, address(0), id, amount);
+    }
+
+    /**
+     * @dev 批量销毁
+     */
+    function _burnBatch(
+        address from,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal virtual {
+        require(from != address(0), "ERC1155: burn from the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+
+        address operator = msg.sender;
+
+        for (uint256 i = 0; i < ids.length; i++) {
+            uint256 id = ids[i];
+            uint256 amount = amounts[i];
+
+            uint256 fromBalance = _balances[id][from];
+            require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
+            unchecked {
+                _balances[id][from] = fromBalance - amount;
+            }
+        }
+
+        emit TransferBatch(operator, from, address(0), ids, amounts);
+    }
+
+    // @dev ERC1155的安全转账检查
+    function _doSafeTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) private {
+        if (to.isContract()) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+            }
+        }
+    }
+
+    // @dev ERC1155的批量安全转账检查
+    function _doSafeBatchTransferAcceptanceCheck(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) private {
+        if (to.isContract()) {
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+                bytes4 response
+            ) {
+                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+            }
+        }
+    }
+
+    /**
+     * @dev 返回ERC1155的id种类代币的uri，存储metadata，类似ERC721的tokenURI.
+     */
+    function uri(uint256 id) public view virtual override returns (string memory) {
+        string memory baseURI = _baseURI();
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, id.toString())) : "";
+    }
+
+    /**
+     * 计算{uri}的BaseURI，uri就是把baseURI和tokenId拼接在一起，需要开发重写.
+     */
+    function _baseURI() internal view virtual returns (string memory) {
+        return "";
+    }
+}
+```
+
+### `BAYC`，但是`ERC1155`
+
+我们魔改下`ERC721`标准的无聊猿`BAYC`，创建一个免费铸造的`BAYC1155`。我们修改`_baseURI()`函数，使得`BAYC1155`的`uri`和`BAYC`的`tokenURI`一样。这样，`BAYC1155`元数据会与无聊猿的相同：
+
+```js
+// SPDX-License-Identifier: MIT
+// by 0xAA
+pragma solidity ^0.8.21;
+
+import "./ERC1155.sol";
+
+contract BAYC1155 is ERC1155{
+    uint256 constant MAX_ID = 10000; 
+    // 构造函数
+    constructor() ERC1155("BAYC1155", "BAYC1155"){
+    }
+
+    //BAYC的baseURI为ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/ 
+    function _baseURI() internal pure override returns (string memory) {
+        return "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/";
+    }
+    
+    // 铸造函数
+    function mint(address to, uint256 id, uint256 amount) external {
+        // id 不能超过10,000
+        require(id < MAX_ID, "id overflow");
+        _mint(to, id, amount, "");
+    }
+
+    // 批量铸造函数
+    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts) external {
+        // id 不能超过10,000
+        for (uint256 i = 0; i < ids.length; i++) {
+            require(ids[i] < MAX_ID, "id overflow");
+        }
+        _mintBatch(to, ids, amounts, "");
+    }
+}
+```
+
+## 11. WETH
+
+### 什么是WETH？
+
+`WETH` (Wrapped ETH)是`ETH`的带包装版本。我们常见的`WETH`，`WBTC`，`WBNB`，都是带包装的原生代币。那么我们为什么要包装它们？
+
+在2015年，ERC20标准出现，该代币标准旨在为以太坊上的代币制定一套标准化的规则，从而简化了新代币的发布，并使区块链上的所有代币相互可比。不幸的是，以太币本身并不符合`ERC20`标准。`WETH`的开发是为了提高区块链之间的互操作性 ，并使`ETH`可用于去中心化应用程序（dApps）。它就像是给原生代币穿了一件智能合约做的衣服：穿上衣服的时候，就变成了`WETH`，符合`ERC20`同质化代币标准，可以跨链，可以用于dApp；脱下衣服，它可1:1兑换ETH。
+
+### `WETH`合约
+
+目前在用的[主网WETH合约](https://rinkeby.etherscan.io/token/0xc778417e063141139fce010982780140aa0cd5ab?a=0xe16c1623c1aa7d919cd2241d8b36d9e79c1be2a2)写于2015年，非常老，那时候solidity是0.4版本。我们用0.8版本重新写一个`WETH`。
+
+`WETH`符合`ERC20`标准，它比普通的`ERC20`多了两个功能：
+
+1. 存款：包装，用户将`ETH`存入`WETH`合约，并获得等量的`WETH`。
+2. 取款：拆包装，用户销毁`WETH`，并获得等量的`ETH`。
+
+```js
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract WETH is ERC20{
+    // 事件：存款和取款
+    event  Deposit(address indexed dst, uint wad);
+    event  Withdrawal(address indexed src, uint wad);
+
+    // 构造函数，初始化ERC20的名字和代号
+    constructor() ERC20("WETH", "WETH"){
+    }
+
+    // 回调函数，当用户往WETH合约转ETH时，会触发deposit()函数
+    fallback() external payable {
+        deposit();
+    }
+    // 回调函数，当用户往WETH合约转ETH时，会触发deposit()函数
+    receive() external payable {
+        deposit();
+    }
+
+    // 存款函数，当用户存入ETH时，给他铸造等量的WETH
+    function deposit() public payable {
+        _mint(msg.sender, msg.value);
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    // 提款函数，用户销毁WETH，取回等量的ETH
+    function withdraw(uint amount) public {
+        require(balanceOf(msg.sender) >= amount);
+        _burn(msg.sender, amount);
+        payable(msg.sender).transfer(amount);
+        emit Withdrawal(msg.sender, amount);
+    }
+}
+```
+
+#### 继承
+
+`WETH`符合`ERC20`代币标准，因此`WETH`合约继承了`ERC20`合约。
+
+#### 事件
+
+`WETH`合约共有2个事件：
+
+1. `Deposit`：存款事件，在存款的时候释放。
+2. `Withdraw`：取款事件，在取款的时候释放。
+
+#### 函数
+
+除了`ERC20`标准的函数外，`WETH`合约有4个函数：
+
+- 构造函数：初始化`WETH`的名字和代号。
+- 回调函数：`fallback()`和`receive()`，当用户往`WETH`合约转`ETH`的时候，会自动触发`deposit()`存款函数，获得等量的`WETH`。
+- `deposit()`：存款函数，当用户存入`ETH`时，给他铸造等量的`WETH`。
+- `withdraw()`：取款函数，让用户销毁`WETH`，并归还等量的`ETH`。
+
+## 12. 分账
+
+分账合约，该合约允许将ETH按权重转给一组账户中，进行分账。代码部分由OpenZeppelin库的[PaymentSplitter合约](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/finance/PaymentSplitter.sol)简化而来。
+
+分账就是按照一定比例分钱财。在现实中，经常会有“分赃不均”的事情发生；而在区块链的世界里，`Code is Law`，我们可以事先把每个人应分的比例写在智能合约中，获得收入后，再由智能合约来进行分账。
+
+### 分账合约
+
+分账合约(`PaymentSplit`)具有以下几个特点：
+
+1. 在创建合约时定好分账受益人`payees`和每人的份额`shares`。
+2. 份额可以是相等，也可以是其他任意比例。
+3. 在该合约收到的所有`ETH`中，每个受益人将能够提取与其分配的份额成比例的金额。
+4. 分账合约遵循`Pull Payment`模式，付款不会自动转入账户，而是保存在此合约中。受益人通过调用`release()`函数触发实际转账。
+
+```js
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.21;
+
+/**
+ * 分账合约
+ * @dev 这个合约会把收到的ETH按事先定好的份额分给几个账户。收到ETH会存在分账合约中，需要每个受益人调用release()函数来领取。
+ */
+contract PaymentSplit{
+```
+
+#### 事件
+
+分账合约中共有3个事件：
+
+- `PayeeAdded`：增加受益人事件。
+- `PaymentReleased`：受益人提款事件。
+- `PaymentReceived`：分账合约收款事件。
+
+```js
+// 事件
+event PayeeAdded(address account, uint256 shares); // 增加受益人事件
+event PaymentReleased(address to, uint256 amount); // 受益人提款事件
+event PaymentReceived(address from, uint256 amount); // 合约收款事件
+```
+
+#### 状态变量
+
+分账合约中共有5个状态变量，用来记录受益地址、份额、支付出去的`ETH`等变量：
+
+- `totalShares`：总份额，为`shares`的和。
+- `totalReleased`：从分账合约向受益人支付出去的`ETH`，为`released`的和。
+- `payees`：`address`数组，记录受益人地址
+- `shares`：`address`到`uint256`的映射，记录每个受益人的份额。
+- `released`：`address`到`uint256`的映射，记录分账合约支付给每个受益人的金额。
+
+```js
+uint256 public totalShares; // 总份额
+uint256 public totalReleased; // 总支付
+
+mapping(address => uint256) public shares; // 每个受益人的份额
+mapping(address => uint256) public released; // 支付给每个受益人的金额
+address[] public payees; // 受益人数组
+```
+
+#### 函数
+
+分账合约中共有6个函数：
+
+- 构造函数：始化受益人数组`_payees`和分账份额数组`_shares`，其中数组长度不能为0，两个数组长度要相等。`_shares`中元素要大于0，`_payees`中地址不能为0地址且不能有重复地址。
+- `receive()`：回调函数，在分账合约收到`ETH`时释放`PaymentReceived`事件。
+- `release()`：分账函数，为有效受益人地址`_account`分配相应的`ETH`。任何人都可以触发这个函数，但ETH会转给受益人地址`account`。调用了`releasable()`函数。
+- `releasable()`：计算一个受益人地址应领取的`ETH`。调用了`pendingPayment()`函数。
+- `pendingPayment()`：根据受益人地址`_account`, 分账合约总收入`_totalReceived`和该地址已领取的钱`_alreadyReleased`，计算该受益人现在应分的`ETH`。
+- `_addPayee()`：新增受益人函数及其份额函数。在合约初始化的时候被调用，之后不能修改。
+
+```js
+/**
+ * @dev 初始化受益人数组_payees和分账份额数组_shares
+ * 数组长度不能为0，两个数组长度要相等。_shares中元素要大于0，_payees中地址不能为0地址且不能有重复地址
+ */
+constructor(address[] memory _payees, uint256[] memory _shares) payable {
+    // 检查_payees和_shares数组长度相同，且不为0
+    require(_payees.length == _shares.length, "PaymentSplitter: payees and shares length mismatch");
+    require(_payees.length > 0, "PaymentSplitter: no payees");
+    // 调用_addPayee，更新受益人地址payees、受益人份额shares和总份额totalShares
+    for (uint256 i = 0; i < _payees.length; i++) {
+        _addPayee(_payees[i], _shares[i]);
+    }
+}
+
+/**
+ * @dev 回调函数，收到ETH释放PaymentReceived事件
+ */
+receive() external payable virtual {
+    emit PaymentReceived(msg.sender, msg.value);
+}
+
+/**
+ * @dev 为有效受益人地址_account分帐，相应的ETH直接发送到受益人地址。任何人都可以触发这个函数，但钱会打给account地址。
+ * 调用了releasable()函数。
+ */
+function release(address payable _account) public virtual {
+    // account必须是有效受益人
+    require(shares[_account] > 0, "PaymentSplitter: account has no shares");
+    // 计算account应得的eth
+    uint256 payment = releasable(_account);
+    // 应得的eth不能为0
+    require(payment != 0, "PaymentSplitter: account is not due payment");
+    // 更新总支付totalReleased和支付给每个受益人的金额released
+    totalReleased += payment;
+    released[_account] += payment;
+    // 转账
+    _account.transfer(payment);
+    emit PaymentReleased(_account, payment);
+}
+
+/**
+ * @dev 计算一个账户能够领取的eth。
+ * 调用了pendingPayment()函数。
+ */
+function releasable(address _account) public view returns (uint256) {
+    // 计算分账合约总收入totalReceived
+    uint256 totalReceived = address(this).balance + totalReleased;
+    // 调用_pendingPayment计算account应得的ETH
+    return pendingPayment(_account, totalReceived, released[_account]);
+}
+
+/**
+ * @dev 根据受益人地址`_account`, 分账合约总收入`_totalReceived`和该地址已领取的钱`_alreadyReleased`，计算该受益人现在应分的`ETH`。
+ */
+function pendingPayment(
+    address _account,
+    uint256 _totalReceived,
+    uint256 _alreadyReleased
+) public view returns (uint256) {
+    // account应得的ETH = 总应得ETH - 已领到的ETH
+    return (_totalReceived * shares[_account]) / totalShares - _alreadyReleased;
+}
+
+/**
+ * @dev 新增受益人_account以及对应的份额_accountShares。只能在构造器中被调用，不能修改。
+ */
+function _addPayee(address _account, uint256 _accountShares) private {
+    // 检查_account不为0地址
+    require(_account != address(0), "PaymentSplitter: account is the zero address");
+    // 检查_accountShares不为0
+    require(_accountShares > 0, "PaymentSplitter: shares are 0");
+    // 检查_account不重复
+    require(shares[_account] == 0, "PaymentSplitter: account already has shares");
+    // 更新payees，shares和totalShares
+    payees.push(_account);
+    shares[_account] = _accountShares;
+    totalShares += _accountShares;
+    // 释放增加受益人事件
+    emit PayeeAdded(_account, _accountShares);
+}
+```
