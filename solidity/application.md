@@ -2681,3 +2681,867 @@ function _addPayee(address _account, uint256 _accountShares) private {
     emit PayeeAdded(_account, _accountShares);
 }
 ```
+
+## 13. 线性释放
+
+介绍代币归属条款，并写一个线性释放ERC20代币的合约。代码由OpenZeppelin的VestingWallet合约简化而来。
+
+### 代币归属条款
+
+在传统金融领域，一些公司会向员工和管理层提供股权。但大量股权同时释放会在短期产生抛售压力，拖累股价。因此，公司通常会引入一个归属期来延迟承诺资产的所有权。同样的，在区块链领域，Web3初创公司会给团队分配代币，同时也会将代币低价出售给风投和私募。如果他们把这些低成本的代币同时提到交易所变现，币价将被砸穿，散户直接成为接盘侠。
+
+所以，项目方一般会约定代币归属条款（token vesting），在归属期内逐步释放代币，减缓抛压，并防止团队和资本方过早躺平。
+
+### 线性释放
+
+线性释放指的是代币在归属期内匀速释放。举个例子，某私募持有365,000枚`ICU`代币，归属期为1年（365天），那么每天会释放1,000枚代币。
+
+下面，我们就写一个锁仓并线性释放`ERC20`代币的合约`TokenVesting`。它的逻辑很简单：
+
+- 项目方规定线性释放的起始时间、归属期和受益人。
+- 项目方将锁仓的`ERC20`代币转账给`TokenVesting`合约。
+- 受益人可以调用`release`函数，从合约中取出释放的代币。
+
+#### 事件
+
+线性释放合约中共有1个事件。
+
+- `ERC20Released`：提币事件，当受益人提取释放代币时释放。
+
+```js
+contract TokenVesting {
+    // 事件
+    event ERC20Released(address indexed token, uint256 amount); // 提币事件
+```
+
+#### 状态变量
+
+线性释放合约中共有4个状态变量。
+
+- `beneficiary`：受益人地址。
+- `start`：归属期起始时间戳。
+- `duration`：归属期，单位为秒。
+- `erc20Released`：代币地址->释放数量的映射，记录受益人已领取的代币数量。
+
+```js
+// 状态变量
+mapping(address => uint256) public erc20Released; // 代币地址->释放数量的映射，记录已经释放的代币
+address public immutable beneficiary; // 受益人地址
+uint256 public immutable start; // 起始时间戳
+uint256 public immutable duration; // 归属期
+```
+
+#### 函数
+
+线性释放合约中共有3个函数。
+
+- 构造函数：初始化受益人地址，归属期(秒), 起始时间戳。参数为受益人地址`beneficiaryAddress`和归属期`durationSeconds`。为了方便，起始时间戳用的部署时的区块链时间戳`block.timestamp`。
+- `release()`：提取代币函数，将已释放的代币转账给受益人。调用了`vestedAmount()`函数计算可提取的代币数量，释放`ERC20Released`事件，然后将代币`transfer`给受益人。参数为代币地址`token`。
+- `vestedAmount()`：根据线性释放公式，查询已经释放的代币数量。开发者可以通过修改这个函数，自定义释放方式。参数为代币地址`token`和查询的时间戳`timestamp`。
+
+```js
+/**
+ * @dev 初始化受益人地址，释放周期(秒), 起始时间戳(当前区块链时间戳)
+ */
+constructor(
+    address beneficiaryAddress,
+    uint256 durationSeconds
+) {
+    require(beneficiaryAddress != address(0), "VestingWallet: beneficiary is zero address");
+    beneficiary = beneficiaryAddress;
+    start = block.timestamp;
+    duration = durationSeconds;
+}
+
+/**
+ * @dev 受益人提取已释放的代币。
+ * 调用vestedAmount()函数计算可提取的代币数量，然后transfer给受益人。
+ * 释放 {ERC20Released} 事件.
+ */
+function release(address token) public {
+    // 调用vestedAmount()函数计算可提取的代币数量
+    uint256 releasable = vestedAmount(token, uint256(block.timestamp)) - erc20Released[token];
+    // 更新已释放代币数量
+    erc20Released[token] += releasable;
+    // 转代币给受益人
+    emit ERC20Released(token, releasable);
+    IERC20(token).transfer(beneficiary, releasable);
+}
+
+/**
+ * @dev 根据线性释放公式，计算已经释放的数量。开发者可以通过修改这个函数，自定义释放方式。
+ * @param token: 代币地址
+ * @param timestamp: 查询的时间戳
+ */
+function vestedAmount(address token, uint256 timestamp) public view returns (uint256) {
+    // 合约里总共收到了多少代币（当前余额 + 已经提取）
+    uint256 totalAllocation = IERC20(token).balanceOf(address(this)) + erc20Released[token];
+    // 根据线性释放公式，计算已经释放的数量
+    if (timestamp < start) {
+        return 0;
+    } else if (timestamp > start + duration) {
+        return totalAllocation;
+    } else {
+        return (totalAllocation * (timestamp - start)) / duration;
+    }
+}
+```
+
+## 14. 代币锁
+
+介绍什么是流动性提供者`LP`代币，为什么要锁定流动性，并写一个简单的`ERC20`代币锁合约。
+
+代币锁(Token Locker)是一种简单的时间锁合约，它可以把合约中的代币锁仓一段时间，受益人在锁仓期满后可以取走代币。代币锁一般是用来锁仓流动性提供者`LP`代币的。
+
+### 什么是`LP`代币？
+
+区块链中，用户在去中心化交易所DEX上交易代币，例如`Uniswap`交易所。DEX和中心化交易所(CEX)不同，去中心化交易所使用自动做市商(`AMM`)机制，需要用户或项目方提供资金池，以使得其他用户能够即时买卖。简单来说，用户/项目方需要质押相应的币对（比如`ETH/DAI`）到资金池中，作为补偿，DEX会给他们铸造相应的流动性提供者`LP`代币凭证，证明他们质押了相应的份额，供他们收取手续费。
+
+### 为什么要锁定流动性？
+
+如果项目方毫无征兆的撤出流动性池中的`LP`代币，那么投资者手中的代币就无法变现，直接归零了。这种行为也叫`rug-pull`，仅2021年，各种`rug-pull`骗局从投资者那里骗取了价值超过28亿美元的加密货币。
+
+但是如果`LP`代币是锁仓在代币锁合约中，在锁仓期结束以前，项目方无法撤出流动性池，也没办法`rug pull`。因此代币锁可以防止项目方过早跑路（要小心锁仓期满跑路的情况）。
+
+### 代币锁合约
+
+下面，我们就写一个锁仓`ERC20`代币的合约`TokenLocker`。它的逻辑很简单：
+
+- 开发者在部署合约时规定锁仓的时间，受益人地址，以及代币合约。
+- 开发者将代币转入`TokenLocker`合约。
+- 在锁仓期满，受益人可以取走合约里的代币。
+
+#### 事件
+
+`TokenLocker`合约中共有2个事件。
+
+- `TokenLockStart`：锁仓开始事件，在合约部署时释放，记录受益人地址，代币地址，锁仓起始时间，和结束时间。
+- `Release`：代币释放事件，在受益人取出代币时释放，记录记录受益人地址，代币地址，释放代币时间，和代币数量。
+
+```js
+// 事件
+event TokenLockStart(address indexed beneficiary, address indexed token, uint256 startTime, uint256 lockTime);
+event Release(address indexed beneficiary, address indexed token, uint256 releaseTime, uint256 amount);
+```
+
+#### 状态变量
+
+`TokenLocker`合约中共有4个状态变量。
+
+- `token`：锁仓代币地址。
+- `beneficiary`：受益人地址。
+- `lockTime`：锁仓时间(秒)。
+- `startTime`：锁仓起始时间戳(秒)。
+
+```js
+// 被锁仓的ERC20代币合约
+IERC20 public immutable token;
+// 受益人地址
+address public immutable beneficiary;
+// 锁仓时间(秒)
+uint256 public immutable lockTime;
+// 锁仓起始时间戳(秒)
+uint256 public immutable startTime;
+```
+
+#### 函数
+
+`TokenLocker`合约中共有2个函数。
+
+- 构造函数：初始化代币合约，受益人地址，以及锁仓时间。
+- `release()`：在锁仓期满后，将代币释放给受益人。需要受益人主动调用`release()`函数提取代币。
+
+```js
+/**
+ * @dev 部署时间锁合约，初始化代币合约地址，受益人地址和锁仓时间。
+ * @param token_: 被锁仓的ERC20代币合约
+ * @param beneficiary_: 受益人地址
+ * @param lockTime_: 锁仓时间(秒)
+ */
+constructor(
+    IERC20 token_,
+    address beneficiary_,
+    uint256 lockTime_
+) {
+    require(lockTime_ > 0, "TokenLock: lock time should greater than 0");
+    token = token_;
+    beneficiary = beneficiary_;
+    lockTime = lockTime_;
+    startTime = block.timestamp;
+
+    emit TokenLockStart(beneficiary_, address(token_), block.timestamp, lockTime_);
+}
+
+/**
+ * @dev 在锁仓时间过后，将代币释放给受益人。
+ */
+function release() public {
+    require(block.timestamp >= startTime+lockTime, "TokenLock: current time is before release time");
+
+    uint256 amount = token.balanceOf(address(this));
+    require(amount > 0, "TokenLock: no tokens to release");
+
+    token.transfer(beneficiary, amount);
+
+    emit Release(msg.sender, address(token), block.timestamp, amount);
+}
+```
+
+## 15. 时间锁
+
+介绍时间锁和时间锁合约。代码由Compound的[Timelock合约](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol)简化而来。
+
+时间锁（Timelock）是银行金库和其他高安全性容器中常见的锁定机制。它是一种计时器，旨在防止保险箱或保险库在预设时间之前被打开，即便开锁的人知道正确密码。
+
+在区块链，时间锁被`DeFi`和`DAO`大量采用。它是一段代码，他可以将智能合约的某些功能锁定一段时间。它可以大大改善智能合约的安全性，举个例子，假如一个黑客黑了`Uniswap`的多签，准备提走金库的钱，但金库合约加了2天锁定期的时间锁，那么黑客从创建提钱的交易，到实际把钱提走，需要2天的等待期。在这一段时间，项目方可以找应对办法，投资者可以提前抛售代币减少损失。
+
+### 时间锁合约
+
+下面，我们介绍一下时间锁`Timelock`合约。它的逻辑并不复杂：
+
+- 在创建`Timelock`合约时，项目方可以设定锁定期，并把合约的管理员设为自己。
+- 时间锁主要有三个功能：
+  - 创建交易，并加入到时间锁队列。
+  - 在交易的锁定期满后，执行交易。
+  - 后悔了，取消时间锁队列中的某些交易。
+- 项目方一般会把时间锁合约设为重要合约的管理员，例如金库合约，再通过时间锁操作他们。
+- 时间锁合约的管理员一般为项目的多签钱包，保证去中心化。
+
+#### 事件
+
+`Timelock`合约中共有4个事件。
+
+- `QueueTransaction`：交易创建并进入时间锁队列的事件。
+- `ExecuteTransaction`：锁定期满后交易执行的事件。
+- `CancelTransaction`：交易取消事件。
+- `NewAdmin`：修改管理员地址的事件。
+
+```js
+// 事件
+// 交易取消事件
+event CancelTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature,  bytes data, uint executeTime);
+// 交易执行事件
+event ExecuteTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature,  bytes data, uint executeTime);
+// 交易创建并进入队列 事件
+event QueueTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint executeTime);
+// 修改管理员地址的事件
+event NewAdmin(address indexed newAdmin);
+```
+
+#### 状态变量
+
+`Timelock`合约中共有4个状态变量。
+
+- `admin`：管理员地址。
+- `delay`：锁定期。
+- `GRACE_PERIOD`：交易过期时间。如果交易到了执行的时间点，但在`GRACE_PERIOD`没有被执行，就会过期。
+- `queuedTransactions`：进入时间锁队列交易的标识符`txHash`到`bool`的映射，记录所有在时间锁队列中的交易。
+
+```js
+// 状态变量
+address public admin; // 管理员地址
+uint public constant GRACE_PERIOD = 7 days; // 交易有效期，过期的交易作废
+uint public delay; // 交易锁定时间 （秒）
+mapping (bytes32 => bool) public queuedTransactions; // txHash到bool，记录所有在时间锁队列中的交易
+```
+
+#### 修饰器
+
+`Timelock`合约中共有2个`modifier`。
+
+- `onlyOwner()`：被修饰的函数只能被管理员执行。
+- `onlyTimelock()`：被修饰的函数只能被时间锁合约执行。
+
+```js
+// onlyOwner modifier
+modifier onlyOwner() {
+    require(msg.sender == admin, "Timelock: Caller not admin");
+    _;
+}
+
+// onlyTimelock modifier
+modifier onlyTimelock() {
+    require(msg.sender == address(this), "Timelock: Caller not Timelock");
+    _;
+}
+```
+
+#### 函数
+
+`Timelock`合约中共有7个函数。
+
+- 构造函数：初始化交易锁定时间（秒）和管理员地址。
+- `queueTransaction()`：创建交易并添加到时间锁队列中。参数比较复杂，因为要描述一个完整的交易：
+  - `target`：目标合约地址
+  - `value`：发送ETH数额
+  - `signature`：调用的函数签名（function signature）
+  - `data`：交易的call data
+  - `executeTime`：交易执行的区块链时间戳。
+
+    调用这个函数时，要保证交易预计执行时间`executeTime`大于当前区块链时间戳+锁定时间`delay`。交易的唯一标识符为所有参数的哈希值，利用`getTxHash()`函数计算。进入队列的交易会更新在`queuedTransactions`变量中，并释放`QueueTransaction`事件。
+
+- `executeTransaction()`：执行交易。它的参数与`queueTransaction()`相同。要求被执行的交易在时间锁队列中，达到交易的执行时间，且没有过期。执行交易时用到了solidity的低级成员函数`call`。
+- `cancelTransaction()`：取消交易。它的参数与`queueTransaction()`相同。它要求被取消的交易在队列中，会更新`queuedTransactions`并释放`CancelTransaction`事件。
+- `changeAdmin()`：修改管理员地址，只能被`Timelock`合约调用。
+- `getBlockTimestamp()`：获取当前区块链时间戳。
+- `getTxHash()`：返回交易的标识符，为很多交易参数的`hash`。
+
+```js
+/**
+ * @dev 构造函数，初始化交易锁定时间 （秒）和管理员地址
+ */
+constructor(uint delay_) {
+    delay = delay_;
+    admin = msg.sender;
+}
+
+/**
+ * @dev 改变管理员地址，调用者必须是Timelock合约。
+ */
+function changeAdmin(address newAdmin) public onlyTimelock {
+    admin = newAdmin;
+
+    emit NewAdmin(newAdmin);
+}
+
+/**
+ * @dev 创建交易并添加到时间锁队列中。
+ * @param target: 目标合约地址
+ * @param value: 发送eth数额
+ * @param signature: 要调用的函数签名（function signature）
+ * @param data: call data，里面是一些参数
+ * @param executeTime: 交易执行的区块链时间戳
+ *
+ * 要求：executeTime 大于 当前区块链时间戳+delay
+ */
+function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 executeTime) public onlyOwner returns (bytes32) {
+    // 检查：交易执行时间满足锁定时间
+    require(executeTime >= getBlockTimestamp() + delay, "Timelock::queueTransaction: Estimated execution block must satisfy delay.");
+    // 计算交易的唯一识别符：一堆东西的hash
+    bytes32 txHash = getTxHash(target, value, signature, data, executeTime);
+    // 将交易添加到队列
+    queuedTransactions[txHash] = true;
+
+    emit QueueTransaction(txHash, target, value, signature, data, executeTime);
+    return txHash;
+}
+
+/**
+ * @dev 取消特定交易。
+ *
+ * 要求：交易在时间锁队列中
+ */
+function cancelTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 executeTime) public onlyOwner{
+    // 计算交易的唯一识别符：一堆东西的hash
+    bytes32 txHash = getTxHash(target, value, signature, data, executeTime);
+    // 检查：交易在时间锁队列中
+    require(queuedTransactions[txHash], "Timelock::cancelTransaction: Transaction hasn't been queued.");
+    // 将交易移出队列
+    queuedTransactions[txHash] = false;
+
+    emit CancelTransaction(txHash, target, value, signature, data, executeTime);
+}
+
+/**
+ * @dev 执行特定交易。
+ *
+ * 要求：
+ * 1. 交易在时间锁队列中
+ * 2. 达到交易的执行时间
+ * 3. 交易没过期
+ */
+function executeTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 executeTime) public payable onlyOwner returns (bytes memory) {
+    bytes32 txHash = getTxHash(target, value, signature, data, executeTime);
+    // 检查：交易是否在时间锁队列中
+    require(queuedTransactions[txHash], "Timelock::executeTransaction: Transaction hasn't been queued.");
+    // 检查：达到交易的执行时间
+    require(getBlockTimestamp() >= executeTime, "Timelock::executeTransaction: Transaction hasn't surpassed time lock.");
+    // 检查：交易没过期
+    require(getBlockTimestamp() <= executeTime + GRACE_PERIOD, "Timelock::executeTransaction: Transaction is stale.");
+    // 将交易移出队列
+    queuedTransactions[txHash] = false;
+
+    // 获取call data
+    bytes memory callData;
+    if (bytes(signature).length == 0) {
+        callData = data;
+    } else {
+        callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
+    }
+    // 利用call执行交易
+    (bool success, bytes memory returnData) = target.call{value: value}(callData);
+    require(success, "Timelock::executeTransaction: Transaction execution reverted.");
+
+    emit ExecuteTransaction(txHash, target, value, signature, data, executeTime);
+
+    return returnData;
+}
+
+/**
+ * @dev 获取当前区块链时间戳
+ */
+function getBlockTimestamp() public view returns (uint) {
+    return block.timestamp;
+}
+
+/**
+ * @dev 将一堆东西拼成交易的标识符
+ */
+function getTxHash(
+    address target,
+    uint value,
+    string memory signature,
+    bytes memory data,
+    uint executeTime
+) public pure returns (bytes32) {
+    return keccak256(abi.encode(target, value, signature, data, executeTime));
+}
+```
+
+## 16. 代理合约
+
+介绍代理合约（Proxy Contract）。教学代码由OpenZeppelin的[Proxy合约](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol)简化而来。
+
+### 代理模式
+
+Solidity合约部署在链上之后，代码是不可变的（immutable）。这样既有优点，也有缺点：
+
+- 优点：安全，用户知道会发生什么（大部分时候）。
+- 坏处：就算合约中存在bug，也不能修改或升级，只能部署新合约。但是新合约的地址与旧的不一样，且合约的数据也需要花费大量gas进行迁移。
+
+有没有办法在合约部署后进行修改或升级呢？答案是有的，那就是**代理模式**。
+
+![](../pic/solidity-3-16-1.png)
+
+代理模式将合约数据和逻辑分开，分别保存在不同合约中。我们拿上图中简单的代理合约为例，数据（状态变量）存储在代理合约中，而逻辑（函数）保存在另一个逻辑合约中。代理合约（Proxy）通过`delegatecall`，将函数调用全权委托给逻辑合约（Implementation）执行，再把最终的结果返回给调用者（Caller）。
+
+代理模式主要有两个好处：
+
+1. 可升级：当我们需要升级合约的逻辑时，只需要将代理合约指向新的逻辑合约。
+2. 省gas：如果多个合约复用一套逻辑，我们只需部署一个逻辑合约，然后再部署多个只保存数据的代理合约，指向逻辑合约。
+
+### 代理合约
+
+下面我们介绍一个简单的代理合约。它有三个部分：代理合约`Proxy`，逻辑合约`Logic`，和一个调用示例`Caller`。它的逻辑并不复杂：
+
+- 首先部署逻辑合约`Logic`。
+- 创建代理合约`Proxy`，状态变量`implementation`记录`Logic`合约地址。
+- `Proxy`合约利用回调函数`fallback`，将所有调用委托给`Logic`合约
+- 最后部署调用示例`Caller`合约，调用`Proxy`合约。
+
+**注意**：`Logic`合约和`Proxy`合约的状态变量存储结构相同，不然`delegatecall`会产生意想不到的行为，有安全隐患。
+
+#### 代理合约`Proxy`
+
+`Proxy`合约不长，但是用到了内联汇编，因此比较难理解。它只有一个状态变量，一个构造函数，和一个回调函数。状态变量`implementation`，在构造函数中初始化，用于保存`Logic`合约地址。
+
+```js
+contract Proxy {
+    address public implementation; // 逻辑合约地址。implementation合约同一个位置的状态变量类型必须和Proxy合约的相同，不然会报错。
+
+    /**
+     * @dev 初始化逻辑合约地址
+     */
+    constructor(address implementation_){
+        implementation = implementation_;
+    }
+```
+
+`Proxy`的回调函数将外部对本合约的调用委托给`Logic`合约。这个回调函数很别致，它利用内联汇编（inline assembly），让本来不能有返回值的回调函数有了返回值。其中用到的内联汇编操作码：
+
+- `calldatacopy(t, f, s)`：将`calldata`（输入数据）从位置f开始复制s字节到`mem`（内存）的位置`t`。
+- `delegatecall(g, a, in, insize, out, outsize)`：调用地址a的合约，输入为`mem[in..(in+insize))`，输出为`mem[out..(out+outsize))`，提供gwei的以太坊gas。这个操作码在错误时返回`0`，在成功时返回`1`。
+- `returndatacopy(t, f, s)`：将`returndata`（输出数据）从位置f开始复制s字节到`mem`（内存）的位置t。
+- `switch`：基础版`if/else`，不同的情况`case`返回不同值。可以有一个默认的`default`情况。
+- `return(p, s)`：终止函数执行, 返回数据`mem[p..(p+s))`。
+- `revert(p, s)`：终止函数执行, 回滚状态，返回数据`mem[p..(p+s))`。
+
+```js
+/**
+* @dev 回调函数，将本合约的调用委托给 `implementation` 合约
+* 通过assembly，让回调函数也能有返回值
+*/
+fallback() external payable {
+    address _implementation = implementation;
+    assembly {
+        // 将msg.data拷贝到内存里
+        // calldatacopy操作码的参数: 内存起始位置，calldata起始位置，calldata长度
+        calldatacopy(0, 0, calldatasize())
+
+        // 利用delegatecall调用implementation合约
+        // delegatecall操作码的参数：gas, 目标合约地址，input mem起始位置，input mem长度，output area mem起始位置，output area mem长度
+        // output area起始位置和长度位置，所以设为0
+        // delegatecall成功返回1，失败返回0
+        let result := delegatecall(gas(), _implementation, 0, calldatasize(), 0, 0)
+
+        // 将return data拷贝到内存
+        // returndata操作码的参数：内存起始位置，returndata起始位置，returndata长度
+        returndatacopy(0, 0, returndatasize())
+
+        switch result
+        // 如果delegate call失败，revert
+        case 0 {
+            revert(0, returndatasize())
+        }
+        // 如果delegate call成功，返回mem起始位置为0，长度为returndatasize()的数据（格式为bytes）
+        default {
+            return(0, returndatasize())
+        }
+    }
+}
+```
+
+#### 逻辑合约`Logic`
+
+这是一个非常简单的逻辑合约，只是为了演示代理合约。它包含2个变量，1个事件，1个函数：
+
+- `implementation`：占位变量，与`Proxy`合约保持一致，防止插槽冲突。
+- `x`：`uint`变量，被设置为`99`。
+- `CallSuccess`事件：在调用成功时释放。
+- `increment()`函数：会被`Proxy`合约调用，释放`CallSuccess`事件，并返回一个`uint`，它的`selector`为`0xd09de08a`。如果直接调用`increment()`回返回`100`，但是通过`Proxy`调用它会返回`1`，大家可以想想为什么？
+
+```js
+/**
+ * @dev 逻辑合约，执行被委托的调用
+ */
+contract Logic {
+    address public implementation; // 与Proxy保持一致，防止插槽冲突
+    uint public x = 99;
+    event CallSuccess(); // 调用成功事件
+
+    // 这个函数会释放CallSuccess事件并返回一个uint。
+    // 函数selector: 0xd09de08a
+    function increment() external returns(uint) {
+        emit CallSuccess();
+        return x + 1;
+    }
+}
+```
+
+#### 调用者合约`Caller`
+
+`Caller`合约会演示如何调用一个代理合约，它也非常简单。
+
+它有1个变量，2个函数：
+
+- `proxy`：状态变量，记录代理合约地址。
+- 构造函数：在部署合约时初始化`proxy`变量。
+- `increase()`：利用`call`来调用代理合约的`increment()`函数，并返回一个`uint`。在调用时，我们利用`abi.encodeWithSignature()`获取了`increment()`函数的`selector`。在返回时，利用`abi.decode()`将返回值解码为`uint`类型。
+
+```js
+/**
+ * @dev Caller合约，调用代理合约，并获取执行结果
+ */
+contract Caller{
+    address public proxy; // 代理合约地址
+
+    constructor(address proxy_){
+        proxy = proxy_;
+    }
+
+    // 通过代理合约调用increment()函数
+    function increment() external returns(uint) {
+        ( , bytes memory data) = proxy.call(abi.encodeWithSignature("increment()"));
+        return abi.decode(data,(uint));
+    }
+}
+```
+
+## 17. 可升级合约
+
+介绍可升级合约（Upgradeable Contract）。教学用的合约由OpenZeppelin中的合约简化而来，可能有安全问题，不要用于生产环境。
+
+如果你理解了代理合约，就很容易理解可升级合约。它就是一个可以更改逻辑合约的代理合约。
+
+![](../pic/solidity-3-17-1.png)
+
+下面我们实现一个简单的可升级合约，它包含3个合约：代理合约，旧的逻辑合约，和新的逻辑合约。
+
+### 代理合约
+
+这个代理合约比[16-代理合约](#16-代理合约)中的简单。我们没有在它的fallback()函数中使用内联汇编，而仅仅用了`implementation.delegatecall(msg.data);`。因此，回调函数没有返回值，但足够教学使用了。
+
+它包含3个变量：
+
+- `implementation`：逻辑合约地址。
+- `admin`：admin地址。
+- `words`：字符串，可以通过逻辑合约的函数改变。
+
+它包含3个函数：
+
+- 构造函数：初始化admin和逻辑合约地址。
+- `fallback()`：回调函数，将调用委托给逻辑合约。
+- `upgrade()`：升级函数，改变逻辑合约地址，只能由admin调用。
+
+```js
+// SPDX-License-Identifier: MIT
+// wtf.academy
+pragma solidity ^0.8.21;
+
+// 简单的可升级合约，管理员可以通过升级函数更改逻辑合约地址，从而改变合约的逻辑。
+// 教学演示用，不要用在生产环境
+contract SimpleUpgrade {
+    address public implementation; // 逻辑合约地址
+    address public admin; // admin地址
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 构造函数，初始化admin和逻辑合约地址
+    constructor(address _implementation){
+        admin = msg.sender;
+        implementation = _implementation;
+    }
+
+    // fallback函数，将调用委托给逻辑合约
+    fallback() external payable {
+        (bool success, bytes memory data) = implementation.delegatecall(msg.data);
+    }
+
+    // 升级函数，改变逻辑合约地址，只能由admin调用
+    function upgrade(address newImplementation) external {
+        require(msg.sender == admin);
+        implementation = newImplementation;
+    }
+}
+```
+
+### 旧逻辑合约
+
+这个逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突。它只有一个函数`foo()`，将代理合约中的`words`的值改为`"old"`。
+
+```js
+// 逻辑合约1
+contract Logic1 {
+    // 状态变量和proxy合约一致，防止插槽冲突
+    address public implementation;
+    address public admin;
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 改变proxy中状态变量，选择器： 0xc2985578
+    function foo() public{
+        words = "old";
+    }
+}
+```
+
+### 新逻辑合约
+
+这个逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突。它只有一个函数`foo()`，将代理合约中的`words`的值改为`"new"`。
+
+```js
+// 逻辑合约2
+contract Logic2 {
+    // 状态变量和proxy合约一致，防止插槽冲突
+    address public implementation;
+    address public admin;
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 改变proxy中状态变量，选择器：0xc2985578
+    function foo() public{
+        words = "new";
+    }
+}
+```
+
+## 18. 透明代理
+
+介绍代理合约的选择器冲突（Selector Clash），以及这一问题的解决方案：透明代理（Transparent Proxy）。教学代码由OpenZeppelin的[TransparentUpgradeableProxy](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/transparent/TransparentUpgradeableProxy.sol)简化而成，不应用于生产。
+
+### 选择器冲突
+
+智能合约中，函数选择器（selector）是函数签名的哈希的前4个字节。例如mint(address account)的选择器为bytes4(keccak256("mint(address)"))，也就是0x6a627842。
+
+由于函数选择器仅有4个字节，范围很小，因此两个不同的函数可能会有相同的选择器，例如下面两个函数：
+
+```js
+// 选择器冲突的例子
+contract Foo {
+    function burn(uint256) external {}
+    function collate_propagate_storage(bytes16) external {}
+}
+```
+
+示例中，函数`burn()`和`collate_propagate_storage()`的选择器都为`0x42966c68`，是一样的，这种情况被称为“选择器冲突”。在这种情况下，`EVM`无法通过函数选择器分辨用户调用哪个函数，因此该合约无法通过编译。
+
+由于代理合约和逻辑合约是两个合约，就算他们之间存在“选择器冲突”也可以正常编译，这可能会导致很严重的安全事故。举个例子，如果逻辑合约的a函数和代理合约的升级函数的选择器相同，那么管理人就会在调用`a`函数的时候，将代理合约升级成一个黑洞合约，后果不堪设想。
+
+目前，有两个可升级合约标准解决了这一问题：透明代理`Transparent Proxy`和通用可升级代理`UUPS`。
+
+### 透明代理
+
+透明代理的逻辑非常简单：管理员可能会因为“函数选择器冲突”，在调用逻辑合约的函数时，误调用代理合约的可升级函数。那么限制管理员的权限，不让他调用任何逻辑合约的函数，就能解决冲突：
+
+- 管理员变为工具人，仅能调用代理合约的可升级函数对合约升级，不能通过回调函数调用逻辑合约。
+- 其它用户不能调用可升级函数，但是可以调用逻辑合约的函数。
+
+#### 代理合约
+
+它包含3个变量：
+
+- `implementation`：逻辑合约地址。
+- `admin`：admin地址。
+- `words`：字符串，可以通过逻辑合约的函数改变。
+
+它包含3个函数：
+
+- 构造函数：初始化admin和逻辑合约地址。
+- `fallback()`：回调函数，将调用委托给逻辑合约，不能由`admin`调用。
+- `upgrade()`：升级函数，改变逻辑合约地址，只能由`admin`调用。
+
+```js
+// 透明可升级合约的教学代码，不要用于生产。
+contract TransparentProxy {
+    address implementation; // logic合约地址
+    address admin; // 管理员
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 构造函数，初始化admin和逻辑合约地址
+    constructor(address _implementation){
+        admin = msg.sender;
+        implementation = _implementation;
+    }
+
+    // fallback函数，将调用委托给逻辑合约
+    // 不能被admin调用，避免选择器冲突引发意外
+    fallback() external payable {
+        require(msg.sender != admin);
+        (bool success, bytes memory data) = implementation.delegatecall(msg.data);
+    }
+
+    // 升级函数，改变逻辑合约地址，只能由admin调用
+    function upgrade(address newImplementation) external {
+        if (msg.sender != admin) revert();
+        implementation = newImplementation;
+    }
+}
+```
+
+#### 逻辑合约
+
+这里的新、旧逻辑合约与[17-可升级合约](#17-可升级合约)一样。逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突；包含一个函数`foo()`，旧逻辑合约会将`words`的值改为`"old"`，新的会改为`"new"`。
+
+```js
+// 旧逻辑合约
+contract Logic1 {
+    // 状态变量和proxy合约一致，防止插槽冲突
+    address public implementation;
+    address public admin;
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 改变proxy中状态变量，选择器： 0xc2985578
+    function foo() public{
+        words = "old";
+    }
+}
+
+// 新逻辑合约
+contract Logic2 {
+    // 状态变量和proxy合约一致，防止插槽冲突
+    address public implementation;
+    address public admin;
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 改变proxy中状态变量，选择器：0xc2985578
+    function foo() public{
+        words = "new";
+    }
+}
+```
+
+## 19. 通用可升级代理
+
+介绍代理合约中选择器冲突（Selector Clash）的另一个解决办法：通用可升级代理（UUPS，universal upgradeable proxy standard）。教学代码由OpenZeppelin的`UUPSUpgradeable`简化而成，不应用于生产。
+
+### UUPS
+
+我们在[18-透明代理](#18-透明代理)已经学习了"选择器冲突"（Selector Clash），即合约存在两个选择器相同的函数，可能会造成严重后果。作为透明代理的替代方案，UUPS也能解决这一问题。
+
+UUPS（universal upgradeable proxy standard，通用可升级代理）将升级函数放在逻辑合约中。这样一来，如果有其它函数与升级函数存在“选择器冲突”，编译时就会报错。
+
+下表中概括了普通可升级合约，透明代理，和UUPS的不同点：
+
+![](../pic/solidity-3-18-1.png)
+
+### UUPS合约
+
+首先我们要复习一下`delegatecall`。如果用户A通过合约B（代理合约）去`delegatecall`合约C（逻辑合约），上下文仍是合约B的上下文，`msg.sender`仍是用户A而不是合约B。因此，UUPS合约可以将升级函数放在逻辑合约中，并检查调用者是否为管理员。
+
+#### UUPS的代理合约
+
+UUPS的代理合约看起来像是个不可升级的代理合约，非常简单，因为升级函数被放在了逻辑合约中。它包含3个变量：
+
+- `implementation`：逻辑合约地址。
+- `admin`：admin地址。
+- `words`：字符串，可以通过逻辑合约的函数改变。
+
+它包含2个函数
+
+- 构造函数：初始化admin和逻辑合约地址。
+- `fallback()`：回调函数，将调用委托给逻辑合约。
+
+```js
+contract UUPSProxy {
+    address public implementation; // 逻辑合约地址
+    address public admin; // admin地址
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 构造函数，初始化admin和逻辑合约地址
+    constructor(address _implementation){
+        admin = msg.sender;
+        implementation = _implementation;
+    }
+
+    // fallback函数，将调用委托给逻辑合约
+    fallback() external payable {
+        (bool success, bytes memory data) = implementation.delegatecall(msg.data);
+    }
+}
+```
+
+#### UUPS的逻辑合约
+
+UUPS的逻辑合约与[17-可升级合约](#17-可升级合约)中的不同是多了个升级函数。UUPS逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突。它包含2个
+
+- `upgrade()`：升级函数，将改变逻辑合约地址`implementation`，只能由`admin`调用。
+- `foo()`：旧UUPS逻辑合约会将`words`的值改为`"old"`，新的会改为`"new"`。
+
+```js
+// UUPS逻辑合约（升级函数写在逻辑合约内）
+contract UUPS1{
+    // 状态变量和proxy合约一致，防止插槽冲突
+    address public implementation;
+    address public admin;
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 改变proxy中状态变量，选择器： 0xc2985578
+    function foo() public{
+        words = "old";
+    }
+
+    // 升级函数，改变逻辑合约地址，只能由admin调用。选择器：0x0900f010
+    // UUPS中，逻辑合约中必须包含升级函数，不然就不能再升级了。
+    function upgrade(address newImplementation) external {
+        require(msg.sender == admin);
+        implementation = newImplementation;
+    }
+}
+
+// 新的UUPS逻辑合约
+contract UUPS2{
+    // 状态变量和proxy合约一致，防止插槽冲突
+    address public implementation;
+    address public admin;
+    string public words; // 字符串，可以通过逻辑合约的函数改变
+
+    // 改变proxy中状态变量，选择器： 0xc2985578
+    function foo() public{
+        words = "new";
+    }
+
+    // 升级函数，改变逻辑合约地址，只能由admin调用。选择器：0x0900f010
+    // UUPS中，逻辑合约中必须包含升级函数，不然就不能再升级了。
+    function upgrade(address newImplementation) external {
+        require(msg.sender == admin);
+        implementation = newImplementation;
+    }
+}
+```
