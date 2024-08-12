@@ -3,6 +3,7 @@
 1. [solidity 基础](./basic.md)
 2. [solidity 进阶](./advance.md)
 3. [solidity 应用](./application.md)
+4. [solidity 安全](./security/README.md)
 
 ## 学习资料
 

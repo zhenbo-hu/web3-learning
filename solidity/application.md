@@ -226,8 +226,8 @@ mapping(address => bool) public requestedAddress;   // 记录领取过代币的�
 水龙头合约中定义了1个`SendToken`事件，记录了每次领取代币的地址和数量，在`requestTokens()`函数被调用时释放。
 
 ```js
-// SendToken事件    
-event SendToken(address indexed Receiver, uint256 indexed Amount); 
+// SendToken事件
+event SendToken(address indexed Receiver, uint256 indexed Amount);
 ```
 
 #### 2.1.3 函数
@@ -253,8 +253,8 @@ function requestTokens() external {
     require(token.balanceOf(address(this)) >= amountAllowed, "Faucet Empty!"); // 水龙头空了
 
     token.transfer(msg.sender, amountAllowed); // 发送token
-    requestedAddress[msg.sender] = true; // 记录领取地址 
-    
+    requestedAddress[msg.sender] = true; // 记录领取地址
+
     emit SendToken(msg.sender, amountAllowed); // 释放SendToken事件
 }
 ```
@@ -608,7 +608,7 @@ contract ERC721 is IERC721, IERC721Metadata{
         require(_owners[tokenId] != address(0), "token doesn't exist");
         return _tokenApprovals[tokenId];
     }
-     
+
     // 授权函数。通过调整_tokenApprovals来，授权 to 地址操作 tokenId，同时释放Approval事件。
     function _approve(
         address owner,
@@ -663,7 +663,7 @@ contract ERC721 is IERC721, IERC721Metadata{
 
         emit Transfer(from, to, tokenId);
     }
-    
+
     // 实现IERC721的transferFrom，非安全转账，不建议使用。调用_transfer函数
     function transferFrom(
         address from,
@@ -722,7 +722,7 @@ contract ERC721 is IERC721, IERC721Metadata{
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    /** 
+    /**
      * 铸造函数。通过调整_balances和_owners变量来铸造tokenId并转账给 to，同时释放Transfer事件。铸造函数。通过调整_balances和_owners变量来铸造tokenId并转账给 to，同时释放Transfer事件。
      * 这个mint函数所有人都能调用，实际使用需要开发人员重写，加上一些条件。
      * 条件:
@@ -784,7 +784,7 @@ contract ERC721 is IERC721, IERC721Metadata{
 
     /**
      * 计算{tokenURI}的BaseURI，tokenURI就是把baseURI和tokenId拼接在一起，需要开发重写。
-     * BAYC的baseURI为ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/ 
+     * BAYC的baseURI为ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/
      */
     function _baseURI() internal view virtual returns (string memory) {
         return "";
@@ -857,7 +857,9 @@ interface ERC721Metadata /* is ERC721 */ {
 这个**0x5b5e139f**的计算就是:
 
 ```js
-IERC721Metadata.name.selector ^ IERC721Metadata.symbol.selector ^ IERC721Metadata.tokenURI.selector
+IERC721Metadata.name.selector ^
+  IERC721Metadata.symbol.selector ^
+  IERC721Metadata.tokenURI.selector;
 ```
 
 solamte实现的ERC721.sol是怎么完成这些ERC165要求的特性的呢？
@@ -938,10 +940,10 @@ uint256 public constant AUCTION_DROP_INTERVAL = 1 minutes; // 每过多久时间
 uint256 public constant AUCTION_DROP_PER_STEP =
     (AUCTION_START_PRICE - AUCTION_END_PRICE) /
     (AUCTION_TIME / AUCTION_DROP_INTERVAL); // 每次价格衰减步长
-    
+
 uint256 public auctionStartTime; // 拍卖开始时间戳
 string private _baseTokenURI;   // metadata URI
-uint256[] private _allTokens; // 记录所有存在的tokenId 
+uint256[] private _allTokens; // 记录所有存在的tokenId
 ```
 
 #### 5.1.2 `DutchAuction`函数
@@ -1007,7 +1009,7 @@ function auctionMint(uint256 quantity) external payable{
 
     uint256 totalCost = getAuctionPrice() * quantity; // 计算mint成本
     require(msg.value >= totalCost, "Need to send more ETH."); // 检查用户是否支付足够ETH
-    
+
     // Mint NFT
     for(uint256 i = 0; i < quantity; i++) {
         uint256 mintIndex = totalSupply();
@@ -1049,11 +1051,11 @@ function withdrawMoney() external onlyOwner {
 
 ```js
 [
-"0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", 
-"0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2",
-"0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db",
-"0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB"
-]
+  "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+  "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2",
+  "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db",
+  "0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB",
+];
 ```
 
 在菜单里选上`Keccak-256`, `hashLeaves`和`sortPairs`选项，然后点击`Compute`，`Merkle Tree`就生成好了。`Merkle Tree`展开为：
@@ -1075,8 +1077,8 @@ function withdrawMoney() external onlyOwner {
 ```js
 [
   "0x999bf57501565dbd2fdcea36efa2b9aef8340a8901e3459f4a4c926275d36cdb",
-  "0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c"
-]
+  "0x4726e4102af77216b09ccd94f40daa10531c87c4d60bba7f3b3faf5ff9f19b3c",
+];
 ```
 
 我们利用`MerkleProof`库来验证：
@@ -1210,11 +1212,11 @@ ECDSA标准中包含两个部分：
 我们将配合ECDSA库讲解这两个部分。本教程所用的`私钥`，`公钥`，`消息`，`以太坊签名`消息，签名如下所示：
 
 ```js
-私钥: 0x227dbb8586117d55284e26620bc76534dfbd2394be34cf4a09cb775d593b6f2b
-公钥: 0xe16C1623c1AA7D919cd2241d8b36d9E79C1Be2A2
-消息: 0x1bf2c0ce4546651a1a2feb457b39d891a6b83931cc2454434f39961345ac378c
-以太坊签名消息: 0xb42ca4636f721c7a331923e764587e98ec577cea1a185f60dfcc14dbb9bd900b
-签名: 0x390d704d7ab732ce034203599ee93dd5d3cb0d4d1d7c600ac11726659489773d559b12d220f99f41d17651b0c1c6a669d346a397f8541760d6b32a5725378b241c
+私钥: 0x227dbb8586117d55284e26620bc76534dfbd2394be34cf4a09cb775d593b6f2b;
+公钥: 0xe16c1623c1aa7d919cd2241d8b36d9e79c1be2a2;
+消息: 0x1bf2c0ce4546651a1a2feb457b39d891a6b83931cc2454434f39961345ac378c;
+以太坊签名消息: 0xb42ca4636f721c7a331923e764587e98ec577cea1a185f60dfcc14dbb9bd900b;
+签名: 0x390d704d7ab732ce034203599ee93dd5d3cb0d4d1d7c600ac11726659489773d559b12d220f99f41d17651b0c1c6a669d346a397f8541760d6b32a5725378b241c;
 ```
 
 #### 创建签名
@@ -1252,7 +1254,7 @@ function toEthSignedMessageHash(bytes32 hash) public pure returns (bytes32) {
 处理后的消息为：
 
 ```js
-以太坊签名消息: 0xb42ca4636f721c7a331923e764587e98ec577cea1a185f60dfcc14dbb9bd900b
+以太坊签名消息: 0xb42ca4636f721c7a331923e764587e98ec577cea1a185f60dfcc14dbb9bd900b;
 ```
 
 3-1. **利用钱包签名**：日常操作中，大部分用户都是通过这种方式进行签名。在获取到需要签名的消息之后，我们需要使用`metamask`钱包进行签名。`metamask`的`personal_sign`方法会自动把`消息`转换为`以太坊签名消息`，然后发起签名。所以我们只需要输入`消息`和`签名者钱包account`即可。需要注意的是输入的`签名者钱包account`需要和`metamask`当前连接的account一致才能使用。
@@ -1260,16 +1262,16 @@ function toEthSignedMessageHash(bytes32 hash) public pure returns (bytes32) {
 因此首先把例子中的`私钥`导入到小狐狸钱包，然后打开浏览器的`console`页面：`Chrome菜单-更多工具-开发者工具-Console`。在连接钱包的状态下（如连接opensea，否则会出现错误），依次输入以下指令进行签名：
 
 ```js
-ethereum.enable()
-account = "0xe16C1623c1AA7D919cd2241d8b36d9E79C1Be2A2"
-hash = "0x1bf2c0ce4546651a1a2feb457b39d891a6b83931cc2454434f39961345ac378c"
-ethereum.request({method: "personal_sign", params: [account, hash]})
+ethereum.enable();
+account = "0xe16C1623c1AA7D919cd2241d8b36d9E79C1Be2A2";
+hash = "0x1bf2c0ce4546651a1a2feb457b39d891a6b83931cc2454434f39961345ac378c";
+ethereum.request({ method: "personal_sign", params: [account, hash] });
 ```
 
 在返回的结果中（`Promise`的`PromiseResult`）可以看到创建好的签名。不同账户有不同的私钥，创建的签名值也不同。利用教程的私钥创建的签名如下所示：
 
 ```js
-0x390d704d7ab732ce034203599ee93dd5d3cb0d4d1d7c600ac11726659489773d559b12d220f99f41d17651b0c1c6a669d346a397f8541760d6b32a5725378b241c
+0x390d704d7ab732ce034203599ee93dd5d3cb0d4d1d7c600ac11726659489773d559b12d220f99f41d17651b0c1c6a669d346a397f8541760d6b32a5725378b241c;
 ```
 
 3-2. **利用web3.py签名**： 批量调用中更倾向于使用代码进行签名，以下是基于web3.py的实现。
@@ -1447,7 +1449,7 @@ Opensea是以太坊上最大的NFT交易平台，总交易总量达到了$300亿
 ```js
 event List(address indexed seller, address indexed nftAddr, uint256 indexed tokenId, uint256 price);
 event Purchase(address indexed buyer, address indexed nftAddr, uint256 indexed tokenId, uint256 price);
-event Revoke(address indexed seller, address indexed nftAddr, uint256 indexed tokenId);    
+event Revoke(address indexed seller, address indexed nftAddr, uint256 indexed tokenId);
 event Update(address indexed seller, address indexed nftAddr, uint256 indexed tokenId, uint256 newPrice);
 ```
 
@@ -1459,7 +1461,7 @@ NFT订单抽象为`Order`结构体，包含挂单价格`price`和持有人`owner
 // 定义order结构体
 struct Order{
     address owner;
-    uint256 price; 
+    uint256 price;
 }
 // NFT Order映射
 mapping(address => mapping(uint256 => Order)) public nftList;
@@ -1520,16 +1522,16 @@ function list(address _nftAddr, uint256 _tokenId, uint256 _price) public{
 ```js
 // 撤单： 卖家取消挂单
 function revoke(address _nftAddr, uint256 _tokenId) public {
-    Order storage _order = nftList[_nftAddr][_tokenId]; // 取得Order        
+    Order storage _order = nftList[_nftAddr][_tokenId]; // 取得Order
     require(_order.owner == msg.sender, "Not Owner"); // 必须由持有人发起
     // 声明IERC721接口合约变量
     IERC721 _nft = IERC721(_nftAddr);
     require(_nft.ownerOf(_tokenId) == address(this), "Invalid Order"); // NFT在合约中
-    
+
     // 将NFT转给卖家
     _nft.safeTransferFrom(address(this), msg.sender, _tokenId);
     delete nftList[_nftAddr][_tokenId]; // 删除order
-    
+
     // 释放Revoke事件
     emit Revoke(msg.sender, _nftAddr, _tokenId);
 }
@@ -1541,15 +1543,15 @@ function revoke(address _nftAddr, uint256 _tokenId) public {
 // 调整价格: 卖家调整挂单价格
 function update(address _nftAddr, uint256 _tokenId, uint256 _newPrice) public {
     require(_newPrice > 0, "Invalid Price"); // NFT价格大于0
-    Order storage _order = nftList[_nftAddr][_tokenId]; // 取得Order        
+    Order storage _order = nftList[_nftAddr][_tokenId]; // 取得Order
     require(_order.owner == msg.sender, "Not Owner"); // 必须由持有人发起
     // 声明IERC721接口合约变量
     IERC721 _nft = IERC721(_nftAddr);
     require(_nft.ownerOf(_tokenId) == address(this), "Invalid Order"); // NFT在合约中
-    
+
     // 调整NFT价格
     _order.price = _newPrice;
-    
+
     // 释放Update事件
     emit Update(msg.sender, _nftAddr, _tokenId, _newPrice);
 }
@@ -1560,7 +1562,7 @@ function update(address _nftAddr, uint256 _tokenId, uint256 _newPrice) public {
 ```js
 // 购买: 买家购买NFT，合约为_nftAddr，tokenId为_tokenId，调用函数时要附带ETH
 function purchase(address _nftAddr, uint256 _tokenId) payable public {
-    Order storage _order = nftList[_nftAddr][_tokenId]; // 取得Order        
+    Order storage _order = nftList[_nftAddr][_tokenId]; // 取得Order
     require(_order.price > 0, "Invalid Price"); // NFT价格大于0
     require(msg.value >= _order.price, "Increase price"); // 购买价格大于标价
     // 声明IERC721接口合约变量
@@ -1589,7 +1591,7 @@ function purchase(address _nftAddr, uint256 _tokenId) payable public {
 我们可以将一些链上的全局变量作为种子，利用`keccak256()`哈希函数来获取伪随机数。这是因为哈希函数具有灵敏性和均一性，可以得到“看似”随机的结果。下面的`getRandomOnchain()`函数利用全局变量`block.timestamp`，`msg.sender`和`blockhash(block.number-1)`作为种子来获取随机数：
 
 ```js
-/** 
+/**
 * 链上伪随机数生成
 * 利用keccak256()打包一些链上的全局变量/自定义变量
 * 返回时转换成uint256类型
@@ -1597,7 +1599,7 @@ function purchase(address _nftAddr, uint256 _tokenId) payable public {
 function getRandomOnchain() public view returns(uint256){
     // remix运行blockhash会报错
     bytes32 randomBytes = keccak256(abi.encodePacked(block.timestamp, msg.sender, blockhash(block.number-1)));
-    
+
     return uint256(randomBytes);
 }
 ```
@@ -1644,14 +1646,14 @@ contract RandomNumberConsumer is VRFConsumerBaseV2{
 
     //请求随机数需要调用VRFCoordinatorV2Interface接口
     VRFCoordinatorV2Interface COORDINATOR;
-    
+
     // 申请后的subId
     uint64 subId;
 
     //存放得到的 requestId 和 随机数
     uint256 public requestId;
     uint256[] public randomWords;
-    
+
     /**
      * 使用chainlink VRF，构造函数需要继承 VRFConsumerBaseV2
      * 不同链参数填的不一样
@@ -1662,14 +1664,14 @@ contract RandomNumberConsumer is VRFConsumerBaseV2{
      * 30 gwei Key Hash: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c
      * Minimum Confirmations 最小确认块数 : 3 （数字大安全性高，一般填12）
      * callbackGasLimit gas限制 : 最大 2,500,000
-     * Maximum Random Values 一次可以得到的随机数个数 : 最大 500          
+     * Maximum Random Values 一次可以得到的随机数个数 : 最大 500
      */
     address vrfCoordinator = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
     bytes32 keyHash = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
     uint16 requestConfirmations = 3;
     uint32 callbackGasLimit = 200_000;
     uint32 numWords = 3;
-    
+
     constructor(uint64 s_subId) VRFConsumerBaseV2(vrfCoordinator){
         COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
         subId = s_subId;
@@ -1683,8 +1685,8 @@ contract RandomNumberConsumer is VRFConsumerBaseV2{
 **注意**: 合约部署后，需要把合约加入到`Subscription`的`Consumers`中，才能发送申请。
 
 ```js
-/** 
- * 向VRF合约申请随机数 
+/**
+ * 向VRF合约申请随机数
  */
 function requestRandomWords() external {
     requestId = COORDINATOR.requestRandomWords(
@@ -1754,10 +1756,10 @@ contract Random is ERC721, VRFConsumerBaseV2{
     uint256 public mintCount; // 已mint数量
 
     // chainlink VRF参数
-    
+
     //VRFCoordinatorV2Interface
     VRFCoordinatorV2Interface COORDINATOR;
-    
+
     /**
      * 使用chainlink VRF，构造函数需要继承 VRFConsumerBaseV2
      * 不同链参数填的不一样
@@ -1767,7 +1769,7 @@ contract Random is ERC721, VRFConsumerBaseV2{
      * 30 gwei Key Hash: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c
      * Minimum Confirmations 最小确认块数 : 3 （数字大安全性高，一般填12）
      * callbackGasLimit gas限制 : 最大 2,500,000
-     * Maximum Random Values 一次可以得到的随机数个数 : 最大 500          
+     * Maximum Random Values 一次可以得到的随机数个数 : 最大 500
      */
     address vrfCoordinator = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
     bytes32 keyHash = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
@@ -1776,7 +1778,7 @@ contract Random is ERC721, VRFConsumerBaseV2{
     uint32 numWords = 1;
     uint64 subId;
     uint256 public requestId;
-    
+
     // 记录VRF申请标识对应的mint地址
     mapping(uint256 => address) public requestToSender;
 ```
@@ -1786,7 +1788,7 @@ contract Random is ERC721, VRFConsumerBaseV2{
 初始化继承的VRFConsumerBaseV2和ERC721合约的相关变量。
 
 ```js
-constructor(uint64 s_subId) 
+constructor(uint64 s_subId)
     VRFConsumerBaseV2(vrfCoordinator)
     ERC721("WTF Random", "WTF"){
         COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
@@ -1805,7 +1807,7 @@ constructor(uint64 s_subId)
 - `fulfillRandomWords()`：`VRF`的回调函数，由`VRF`合约在验证随机数真实性后自动调用，用返回的链下随机数铸造NFT。
 
 ```js
-/** 
+/**
 * 输入uint256数字，返回一个可以mint的tokenId
 * 算法过程可理解为：totalSupply个空杯子（0初始化的ids）排成一排，每个杯子旁边放一个球，编号为[0, totalSupply - 1]。
 每次从场上随机拿走一个球（球可能在杯子旁边，这是初始状态；也可能是在杯子里，说明杯子旁边的球已经被拿走过，则此时新的球从末尾被放到了杯子里）
@@ -1823,7 +1825,7 @@ function pickRandomUniqueId(uint256 random) private returns (uint256 tokenId) {
     ids[len - 1] = 0; // 删除最后一个元素，能返还gas
 }
 
-/** 
+/**
 * 链上伪随机数生成
 * keccak256(abi.encodePacked()中填上一些链上的全局变量/自定义变量
 * 返回时转换成uint256类型
@@ -1843,7 +1845,7 @@ function mintRandomOnchain() public {
     _mint(msg.sender, _tokenId);
 }
 
-/** 
+/**
  * 调用VRF获取随机数，并mintNFT
  * 要调用requestRandomness()函数获取，消耗随机数的逻辑写在VRF的回调函数fulfillRandomness()中
  * 调用前，需要在Subscriptions中转入足够的Link
@@ -2030,7 +2032,7 @@ import "https://github.com/AmazingAng/WTF-Solidity/blob/main/34_ERC721/IERC165.s
  */
 interface IERC1155Receiver is IERC165 {
     /**
-     * @dev 接受ERC1155安全转账`safeTransferFrom` 
+     * @dev 接受ERC1155安全转账`safeTransferFrom`
      * 需要返回 0xf23a6e61 或 `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
      */
     function onERC1155Received(
@@ -2042,7 +2044,7 @@ interface IERC1155Receiver is IERC165 {
     ) external returns (bytes4);
 
     /**
-     * @dev 接受ERC1155批量安全转账`safeBatchTransferFrom` 
+     * @dev 接受ERC1155批量安全转账`safeBatchTransferFrom`
      * 需要返回 0xbc197c81 或 `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
      */
     function onERC1155BatchReceived(
@@ -2210,7 +2212,7 @@ contract ERC1155 is IERC165, IERC1155, IERC1155MetadataURI {
         // 释放事件
         emit TransferSingle(operator, from, to, id, amount);
         // 安全检查
-        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);    
+        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
     }
 
     /**
@@ -2238,7 +2240,7 @@ contract ERC1155 is IERC165, IERC1155, IERC1155MetadataURI {
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         require(to != address(0), "ERC1155: transfer to the zero address");
 
-        // 通过for循环更新持仓  
+        // 通过for循环更新持仓
         for (uint256 i = 0; i < ids.length; ++i) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
@@ -2253,7 +2255,7 @@ contract ERC1155 is IERC165, IERC1155, IERC1155MetadataURI {
 
         emit TransferBatch(operator, from, to, ids, amounts);
         // 安全检查
-        _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);    
+        _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
     }
 
     /**
@@ -2423,16 +2425,16 @@ pragma solidity ^0.8.21;
 import "./ERC1155.sol";
 
 contract BAYC1155 is ERC1155{
-    uint256 constant MAX_ID = 10000; 
+    uint256 constant MAX_ID = 10000;
     // 构造函数
     constructor() ERC1155("BAYC1155", "BAYC1155"){
     }
 
-    //BAYC的baseURI为ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/ 
+    //BAYC的baseURI为ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/
     function _baseURI() internal pure override returns (string memory) {
         return "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/";
     }
-    
+
     // 铸造函数
     function mint(address to, uint256 id, uint256 amount) external {
         // id 不能超过10,000
@@ -2972,6 +2974,7 @@ modifier onlyTimelock() {
 
 - 构造函数：初始化交易锁定时间（秒）和管理员地址。
 - `queueTransaction()`：创建交易并添加到时间锁队列中。参数比较复杂，因为要描述一个完整的交易：
+
   - `target`：目标合约地址
   - `value`：发送ETH数额
   - `signature`：调用的函数签名（function signature）
@@ -4037,7 +4040,7 @@ contract ERC4626 is ERC20, IERC4626 {
     /*//////////////////////////////////////////////////////////////
                     状态变量
     //////////////////////////////////////////////////////////////*/
-    ERC20 private immutable _asset; // 
+    ERC20 private immutable _asset; //
     uint8 private immutable _decimals;
 
     constructor(
@@ -4132,7 +4135,7 @@ contract ERC4626 is ERC20, IERC4626 {
         _burn(owner, shares);
         _asset.transfer(receiver, assets);
 
-        // 释放 Withdraw 事件       
+        // 释放 Withdraw 事件
         emit Withdraw(msg.sender, receiver, owner, assets, shares);
     }
 
@@ -4226,21 +4229,21 @@ EIP712 的应用一般包含链下签名（前端或脚本）和链上验证（�
 
 ```js
 EIP712Domain: [
-    { name: "name", type: "string" },
-    { name: "version", type: "string" },
-    { name: "chainId", type: "uint256" },
-    { name: "verifyingContract", type: "address" },
-]
+  { name: "name", type: "string" },
+  { name: "version", type: "string" },
+  { name: "chainId", type: "uint256" },
+  { name: "verifyingContract", type: "address" },
+];
 ```
 
 这些信息会在用户签名时显示，并确保只有特定链的特定合约才能验证签名。你需要在脚本中传入相应参数。
 
 ```js
 const domain = {
-    name: "EIP712Storage",
-    version: "1",
-    chainId: "1",
-    verifyingContract: "0xf8e81D47203A594245E36C48e151709F0C19fBe8",
+  name: "EIP712Storage",
+  version: "1",
+  chainId: "1",
+  verifyingContract: "0xf8e81D47203A594245E36C48e151709F0C19fBe8",
 };
 ```
 
@@ -4248,10 +4251,10 @@ const domain = {
 
 ```js
 const types = {
-    Storage: [
-        { name: "spender", type: "address" },
-        { name: "number", type: "uint256" },
-    ],
+  Storage: [
+    { name: "spender", type: "address" },
+    { name: "number", type: "uint256" },
+  ],
 };
 ```
 
@@ -4259,8 +4262,8 @@ const types = {
 
 ```js
 const message = {
-    spender: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
-    number: "100",
+  spender: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+  number: "100",
 };
 ```
 
@@ -4270,7 +4273,7 @@ const message = {
 
 ```js
 // 获得provider
-const provider = new ethers.BrowserProvider(window.ethereum)
+const provider = new ethers.BrowserProvider(window.ethereum);
 // 获得signer后调用signTypedData方法进行eip712签名
 const signature = await signer.signTypedData(domain, types, message);
 console.log("Signature:", signature);
@@ -4630,7 +4633,9 @@ import { ethers } from "ethers";
 
 // 初始化两条链的provider
 const providerGoerli = new ethers.JsonRpcProvider("Goerli_Provider_URL");
-const providerSepolia = new ethers.JsonRpcProvider("Sepolia_Provider_URL://eth-sepolia.g.alchemy.com/v2/RgxsjQdKTawszh80TpJ-14Y8tY7cx5W2");
+const providerSepolia = new ethers.JsonRpcProvider(
+  "Sepolia_Provider_URL://eth-sepolia.g.alchemy.com/v2/RgxsjQdKTawszh80TpJ-14Y8tY7cx5W2",
+);
 
 // 初始化两条链的signer
 // privateKey填管理者钱包的私钥
@@ -4643,44 +4648,56 @@ const contractAddressGoerli = "0xa2950F56e2Ca63bCdbA422c8d8EF9fC19bcF20DD";
 const contractAddressSepolia = "0xad20993E1709ed13790b321bbeb0752E50b8Ce69";
 
 const abi = [
-    "event Bridge(address indexed user, uint256 amount)",
-    "function bridge(uint256 amount) public",
-    "function mint(address to, uint amount) external",
+  "event Bridge(address indexed user, uint256 amount)",
+  "function bridge(uint256 amount) public",
+  "function mint(address to, uint amount) external",
 ];
 
 // 初始化合约实例
-const contractGoerli = new ethers.Contract(contractAddressGoerli, abi, walletGoerli);
-const contractSepolia = new ethers.Contract(contractAddressSepolia, abi, walletSepolia);
+const contractGoerli = new ethers.Contract(
+  contractAddressGoerli,
+  abi,
+  walletGoerli,
+);
+const contractSepolia = new ethers.Contract(
+  contractAddressSepolia,
+  abi,
+  walletSepolia,
+);
 
 const main = async () => {
-    try{
-        console.log(`开始监听跨链事件`)
+  try {
+    console.log(`开始监听跨链事件`);
 
-        // 监听chain Sepolia的Bridge事件，然后在Goerli上执行mint操作，完成跨链
-        contractSepolia.on("Bridge", async (user, amount) => {
-            console.log(`Bridge event on Chain Sepolia: User ${user} burned ${amount} tokens`);
+    // 监听chain Sepolia的Bridge事件，然后在Goerli上执行mint操作，完成跨链
+    contractSepolia.on("Bridge", async (user, amount) => {
+      console.log(
+        `Bridge event on Chain Sepolia: User ${user} burned ${amount} tokens`,
+      );
 
-            // 在执行burn操作
-            let tx = await contractGoerli.mint(user, amount);
-            await tx.wait();
+      // 在执行burn操作
+      let tx = await contractGoerli.mint(user, amount);
+      await tx.wait();
 
-            console.log(`Minted ${amount} tokens to ${user} on Chain Goerli`);
-        });
+      console.log(`Minted ${amount} tokens to ${user} on Chain Goerli`);
+    });
 
-        // 监听chain Goerli的Bridge事件，然后在Sepolia上执行mint操作，完成跨链
-        contractGoerli.on("Bridge", async (user, amount) => {
-            console.log(`Bridge event on Chain Goerli: User ${user} burned ${amount} tokens`);
+    // 监听chain Goerli的Bridge事件，然后在Sepolia上执行mint操作，完成跨链
+    contractGoerli.on("Bridge", async (user, amount) => {
+      console.log(
+        `Bridge event on Chain Goerli: User ${user} burned ${amount} tokens`,
+      );
 
-            // 在执行burn操作
-            let tx = await contractSepolia.mint(user, amount);
-            await tx.wait();
+      // 在执行burn操作
+      let tx = await contractSepolia.mint(user, amount);
+      await tx.wait();
 
-            console.log(`Minted ${amount} tokens to ${user} on Chain Sepolia`);
-        });
-    } catch(e) {
-        console.log(e);
-    }
-}
+      console.log(`Minted ${amount} tokens to ${user} on Chain Sepolia`);
+    });
+  } catch (e) {
+    console.log(e);
+  }
+};
 
 main();
 ```
@@ -4818,11 +4835,11 @@ contract SimpleSwap is ERC20 {
 
 1. 代币池被首次添加流动性时，LP份额 $\Delta{L}$ 由添加代币数量乘积的平方根决定:
 
-    $$\Delta{L}=\sqrt{\Delta{x} *\Delta{y}}$$
+   $$\Delta{L}=\sqrt{\Delta{x} *\Delta{y}}$$
 
 2. 非首次添加流动性时，LP份额由添加代币数量占池子代币储备量的比例决定（两个代币的比例取更小的那个）:
 
-    $$\Delta{L}=L*\min{(\frac{\Delta{x}}{x}, \frac{\Delta{y}}{y})}$$
+   $$\Delta{L}=L*\min{(\frac{\Delta{x}}{x}, \frac{\Delta{y}}{y})}$$
 
 因为 `SimpleSwap` 合约继承了 ERC20 代币标准，在计算好LP份额后，可以将份额以代币形式铸造给用户。
 
@@ -4880,7 +4897,7 @@ function addLiquidity(uint amount0Desired, uint amount1Desired) public returns(u
 4. 销毁LP份额。
 5. 将相应的代币转账给用户。
 6. 更新储备量。
-5. 释放 `Burn` 事件。
+7. 释放 `Burn` 事件。
 
 ```js
 // 移除流动性，销毁LP，转出代币
@@ -4959,7 +4976,7 @@ function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) public pur
 function swap(uint amountIn, IERC20 tokenIn, uint amountOutMin) external returns (uint amountOut, IERC20 tokenOut){
     require(amountIn > 0, 'INSUFFICIENT_OUTPUT_AMOUNT');
     require(tokenIn == token0 || tokenIn == token1, 'INVALID_TOKEN');
-    
+
     uint balance0 = token0.balanceOf(address(this));
     uint balance1 = token1.balanceOf(address(this));
 
