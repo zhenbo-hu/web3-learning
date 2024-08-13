@@ -1,11 +1,12 @@
 <!-- trunk-ignore-all(prettier) -->
+
 # solidity 基础
 
 ## 1. solidity 类型
 
 1. 值类型（Value Type）：包括布尔型，整型等，这类变量赋值时直接传递数值
-2. 引用类型（Reference Type）：包括数组和结构体，这类变量占用空间大，赋值时直接传递地址（类似C/C++中的指针）
-3. 映射类型（Mapping Type）：solidity中存储键值对的数据结构，可以理解为哈希表
+2. 引用类型（Reference Type）：包括数组和结构体，这类变量占用空间大，赋值时直接传递地址（类似 C/C++中的指针）
+3. 映射类型（Mapping Type）：solidity 中存储键值对的数据结构，可以理解为哈希表
 
 ### 1.1 值类型
 
@@ -55,7 +56,7 @@ bool public _number_bool = _number2 > _number3;
 
 地址类型有两类
 
-- address：存储一个20字节的值（以太坊地址的大小）
+- address：存储一个 20 字节的值（以太坊地址的大小）
 - payable address：比普通地址多了`transfer`和`send`两个成员方法，用于接收转账
 
 ```js
@@ -69,7 +70,7 @@ uint256 public balance = _address1.balance;
 
 字节数组分为定长和不定长两种：
 
-- 定长字节数组：属于值类型，数组长度声明后不能改变。根据字节数组的长度分为`bytes1`,`bytes8`,`bytes32`等类型。定长字节数组最多存储32字节的数据，即`bytes32`。
+- 定长字节数组：属于值类型，数组长度声明后不能改变。根据字节数组的长度分为`bytes1`,`bytes8`,`bytes32`等类型。定长字节数组最多存储 32 字节的数据，即`bytes32`。
 - 不定长字节数组：属于引用类型，数组长度在声明后可以改变，后续介绍
 
 ```js
@@ -80,7 +81,7 @@ address[100] array3;
 
 #### 1.1.5 枚举 `enum`
 
-枚举是用于用户定义的数据类型。主要用于为`uint`分配名称，使程序易于阅读和维护。与C/C++中的`enum`类型，使用名称来代替从0开始的`uint`。
+枚举是用于用户定义的数据类型。主要用于为`uint`分配名称，使程序易于阅读和维护。与 C/C++中的`enum`类型，使用名称来代替从 0 开始的`uint`。
 
 枚举可以显示的与`uint`相互转换，并会检查转换的数值是否在枚举的长度内，否则会报错。
 
@@ -107,7 +108,7 @@ address[] array3;
 bytes array4;
 ```
 
-注意： `bytes`比较特殊，是数组，但不用加`[]`。另外，不能用`byte[]`声明单字节数组，可以使用`bytes`或`bytes1[]`。`bytes`比`bytes1[]`省gas。
+注意： `bytes`比较特殊，是数组，但不用加`[]`。另外，不能用`byte[]`声明单字节数组，可以使用`bytes`或`bytes1[]`。`bytes`比`bytes1[]`省 gas。
 
 ##### 创建数组的规则
 
@@ -118,7 +119,7 @@ uint[] memory array5 = new uint[](5);
 bytes memory array6 = new bytes(9);
 ```
 
-- 数组字面常熟（Array Literals）是写作表达式形式的数组，用方括号包着来初始化array的一种方式，并且里面每一个元素的type是以第一个元素为准的，例如`[1,2,3]`里面所有的元素都是`uint8`类型，因为在solidity中，如果一个值没有指定type的话，会根据上下文推断出元素的类型，默认就是最小单位的type。而`[uint(1),2,3]`里面的元素都是`uint`类型，因为第一个元素指定是`uint`类型了。
+- 数组字面常熟（Array Literals）是写作表达式形式的数组，用方括号包着来初始化 array 的一种方式，并且里面每一个元素的 type 是以第一个元素为准的，例如`[1,2,3]`里面所有的元素都是`uint8`类型，因为在 solidity 中，如果一个值没有指定 type 的话，会根据上下文推断出元素的类型，默认就是最小单位的 type。而`[uint(1),2,3]`里面的元素都是`uint`类型，因为第一个元素指定是`uint`类型了。
 
 - 如果创建的是动态数组，需要一个一个元素的赋值
 
@@ -138,7 +139,7 @@ x[2] = 100;
 
 #### 1.2.2 结构体 struct
 
-solidity支持通过结构体的形式定义新的类型。结构体中的元素可以是原始类型，也可以是引用类型；结构体可以作为数组或映射的元素。创建结构体的方法：
+solidity 支持通过结构体的形式定义新的类型。结构体中的元素可以是原始类型，也可以是引用类型；结构体可以作为数组或映射的元素。创建结构体的方法：
 
 ```js
 struct Student{
@@ -189,7 +190,7 @@ mapping(address => uint) public swapPair;
 
 #### 1.3.1 映射的规则
 
-- 规则1:映射的`_KeyType`只能选择solidity的内置类型，比如`uint`,`address`等，不能用自定义的结构体。而`_ValueType`可以使用自定义的类型。下面的例子会报错，因为`_KeyValue`使用了自定义的结构体：
+- 规则 1:映射的`_KeyType`只能选择 solidity 的内置类型，比如`uint`,`address`等，不能用自定义的结构体。而`_ValueType`可以使用自定义的类型。下面的例子会报错，因为`_KeyValue`使用了自定义的结构体：
 
 ```js
 struct Student {
@@ -200,9 +201,9 @@ struct Student {
 mapping(Student => uint) public tmpMapping;
 ```
 
-- 规则2:映射的存储位置必须是`storage`，因此可以用于合约的状态变量，函数中的`storage`变量和library函数的参数。不能用于`public`函数的参数或返回结果中，因为`mapping`记录的是一种关系（key-value pair）。
-- 规则3:如果映射声明为`public`，那么solidity会自动创建一个`getter`函数，可以通过`key`来查询对应的`value`。
-- 规则4:给映射新增键值对的语法为`_var[key] = _value`，其中`_var`是映射名，`_key`和`_value`对应新增的键值对。例子：
+- 规则 2:映射的存储位置必须是`storage`，因此可以用于合约的状态变量，函数中的`storage`变量和 library 函数的参数。不能用于`public`函数的参数或返回结果中，因为`mapping`记录的是一种关系（key-value pair）。
+- 规则 3:如果映射声明为`public`，那么 solidity 会自动创建一个`getter`函数，可以通过`key`来查询对应的`value`。
+- 规则 4:给映射新增键值对的语法为`_var[key] = _value`，其中`_var`是映射名，`_key`和`_value`对应新增的键值对。例子：
 
 ```js
 function writeMap(uint _key, address _value) public {
@@ -212,13 +213,13 @@ function writeMap(uint _key, address _value) public {
 
 #### 1.3.2 映射的原理
 
-- 原理1:映射不存储任何键`key`的信息，也没有`length`信息。
-- 原理2:映射使用`keccak256(abi.encodePacked(key, slot))`当成offset存取`value，其中`slot`是映射变量定义所在的插槽位置。
-- 原理3:因为Ethereum会定义所有未使用的空间为0，所以为赋值(`value`)的键(`key`)初始值都是各个type的默认值，如uint的默认值是0.
+- 原理 1:映射不存储任何键`key`的信息，也没有`length`信息。
+- 原理 2:映射使用`keccak256(abi.encodePacked(key, slot))`当成 offset 存取`value，其中`slot`是映射变量定义所在的插槽位置。
+- 原理 3:因为 Ethereum 会定义所有未使用的空间为 0，所以为赋值(`value`)的键(`key`)初始值都是各个 type 的默认值，如 uint 的默认值是 0.
 
 ### 1.4 变量初始值
 
-在solidity中，声明但没有赋值的变量都有它的初始值或默认值。
+在 solidity 中，声明但没有赋值的变量都有它的初始值或默认值。
 
 #### 1.4.1 值类型的初始值
 
@@ -244,7 +245,7 @@ function writeMap(uint _key, address _value) public {
 
 ### 1.5 常数 `constant`和`immutable`
 
-`constant`(常数)，`immutable`(不变量)。状态变量声明时使用这两个关键字之后，不能在初始化后更改数值。好处是提升合约的安全性并节省gas。
+`constant`(常数)，`immutable`(不变量)。状态变量声明时使用这两个关键字之后，不能在初始化后更改数值。好处是提升合约的安全性并节省 gas。
 
 只有数值变量可以声明为`constant`和`immutable`；`string`和`bytes`可以声明为`constant`，不能声明为`immutable`.
 
@@ -281,7 +282,7 @@ constructor() {
 
 **`private`**：只能从本合约内部访问，继承的合约也不能使用。
 
-**`external`**：只能从合约外部访问（但内部可以通过 `this.f()` 来调用，f是函数名）。
+**`external`**：只能从合约外部访问（但内部可以通过 `this.f()` 来调用，f 是函数名）。
 
 **`internal`**: 只能从合约内部访问，继承的合约可以用。
 
@@ -303,7 +304,7 @@ function minusCall() external {
 
 ### 2.2 函数关键字 `pure`和`view`
 
-solidity 引入这两个关键字主要是因为 **以太坊交易需要支付gas fee**。合约的状态变量存储在链上，gas fee 很贵，如果计算不改变链上状态，就可以不用付 gas。包含 `pure` 和 `view` 关键字的函数是不改写链上状态的，因此用户直接调用它们是不需要付 gas 的（注意，合约中非 `pure/view` 函数调用 `pure/view` 函数时需要付gas）。
+solidity 引入这两个关键字主要是因为 **以太坊交易需要支付 gas fee**。合约的状态变量存储在链上，gas fee 很贵，如果计算不改变链上状态，就可以不用付 gas。包含 `pure` 和 `view` 关键字的函数是不改写链上状态的，因此用户直接调用它们是不需要付 gas 的（注意，合约中非 `pure/view` 函数调用 `pure/view` 函数时需要付 gas）。
 
 在以太坊中，以下语句被视为修改链上状态：
 
@@ -339,7 +340,7 @@ contract PureAndView{
         new_number = _number + 1;
     }
 
-    // view function 
+    // view function
     function addView() external returns(uint256 new_number) {
         new_number = number + 1;
     }
@@ -353,7 +354,7 @@ contract PureAndView{
 `payable`含义和用法：
 
 - 合约接收以太币：使用`payable`声明的函数可以接收以太币作为函数调用的一部分。这使得其他地址可以向合约发送以太币，从而实现资金的存储和管理
-- 合约发送以太币：使用`address`类型的变量可以调用`.transfer()`或`.send()`方法向其他地址发送以太币。当向一个合约地址发送以太币时，该合约需要使用payable修饰的函数来接收和处理传入的以太币
+- 合约发送以太币：使用`address`类型的变量可以调用`.transfer()`或`.send()`方法向其他地址发送以太币。当向一个合约地址发送以太币时，该合约需要使用 payable 修饰的函数来接收和处理传入的以太币
 
 ```js
 function storeValue() public payable {
@@ -370,7 +371,7 @@ function sendValue(address payable recipient) public {
 
 ### 2.4 返回值
 
-solidity中与函数输出相关的两个关键字：`return`和`returns`。区别在于：
+solidity 中与函数输出相关的两个关键字：`return`和`returns`。区别在于：
 
 - `return`: 用于函数主体中，返回指定的变量。
 - `returns`: 跟在函数名后，用于声明返回的变量类型及变量名。
@@ -383,7 +384,7 @@ function returnMultiple() public pure returns(uint256, book, uint256[3] memory) 
 
 #### 2.4.1 命名式返回
 
-在`returns`中标明返回变量的名称。solidity会初始化这些变量，并自动返回这些变量，无需使用`return`。
+在`returns`中标明返回变量的名称。solidity 会初始化这些变量，并自动返回这些变量，无需使用`return`。
 
 ```js
 function returnNamed() public returns(uint256 _number, bool _bool, uint256[3] memory _array) {
@@ -403,7 +404,7 @@ function returnNamed() public returns(uint256 _number, bool _bool, uint256[3] me
 
 #### 2.4.2 解构式赋值
 
-solidity支持使用解构式赋值规则来读取函数的全部或部分返回值。
+solidity 支持使用解构式赋值规则来读取函数的全部或部分返回值。
 
 - 读取所有返回值：声明变量，然后将要赋值的变量用`,`隔开，按顺序排列。
 
@@ -423,13 +424,13 @@ uint256[3] memory _array;
 
 ### 2.5 变量数据存储和作用域
 
-#### 2.5.1 solidity中的引用类型
+#### 2.5.1 solidity 中的引用类型
 
 **引用类型（Reference Type）**：包括数组(`array`)和结构体(`struct`)。由于这类变量比较复杂，占用存储空间大，我们在使用时必须要声明数据存储的位置
 
 ##### 数据位置
 
-solidity数据存储位置有三类：`storage`,`memory`和`calldata`。不同存储位置的gas成本不同。`storage`类型的数据存储在链上，类似计算机的硬盘，消耗gas多；`memory`和`calldata`类型的存储位置是临时存储在内存中，消耗gas少。用法：
+solidity 数据存储位置有三类：`storage`,`memory`和`calldata`。不同存储位置的 gas 成本不同。`storage`类型的数据存储在链上，类似计算机的硬盘，消耗 gas 多；`memory`和`calldata`类型的存储位置是临时存储在内存中，消耗 gas 少。用法：
 
 - `storage`：合约里的状态变量默认都是`storage`，存储在链上。
 - `memory`：函数里的参数和临时变量一般用`memory`，存储在内存中，不上链。尤其是如果返回数据类型是变长的情况下，必须加`memory`修饰，例如：`string`,`bytes`和自定义结构等类型。
@@ -462,11 +463,11 @@ function fStorage() public {
 
 ##### 变量的作用域
 
-solidity中变量按作用域划分为三种，分别是状态变量（state variable），局部变量（local variable）和全局变量（global variable）
+solidity 中变量按作用域划分为三种，分别是状态变量（state variable），局部变量（local variable）和全局变量（global variable）
 
 ###### 1. 状态变量
 
-状态变量是数据存储在链上的变量，所有合约内函数都可以访问，gas消耗高。状态变量在合约内、函数外声明。可以在函数里更改状态变量的值。
+状态变量是数据存储在链上的变量，所有合约内函数都可以访问，gas 消耗高。状态变量在合约内、函数外声明。可以在函数里更改状态变量的值。
 
 ```js
 contract Variables {
@@ -484,7 +485,7 @@ function foo() external {
 
 ###### 2. 局部变量
 
-局部变量是仅在函数执行过程中有效的变量，函数退出后，变量无效。局部变量的数据存储在内存内，不上链，gas低。局部变量在函数内声明：
+局部变量是仅在函数执行过程中有效的变量，函数退出后，变量无效。局部变量的数据存储在内存内，不上链，gas 低。局部变量在函数内声明：
 
 ```js
 function bar() external pure returns(uint) {
@@ -497,7 +498,7 @@ function bar() external pure returns(uint) {
 
 ###### 3. 全局变量
 
-全局变量是全局范围工作的变量，都是solidity预留关键字。它们可以在函数内不声明直接使用：
+全局变量是全局范围工作的变量，都是 solidity 预留关键字。它们可以在函数内不声明直接使用：
 
 ```js
 function global() external view returns(address, uint, bytes memory) {
@@ -508,26 +509,26 @@ function global() external view returns(address, uint, bytes memory) {
 }
 ```
 
-在上面的例子里，使用了3个常用的全局变量：`msg.sender`,`block.number`,`msg.data`，它们分别代表请求发起抵制，当前区块高度，请求数据。下面是一些常用的全局变量，更完整的列表请看[链接](https://learnblockchain.cn/docs/solidity/units-and-global-variables.html#special-variables-and-functions)
+在上面的例子里，使用了 3 个常用的全局变量：`msg.sender`,`block.number`,`msg.data`，它们分别代表请求发起抵制，当前区块高度，请求数据。下面是一些常用的全局变量，更完整的列表请看[链接](https://learnblockchain.cn/docs/solidity/units-and-global-variables.html#special-variables-and-functions)
 
-- `blockhash(uint blockNumber)`:(`bytes32`)给定区块的哈希值 - 只适用于256个最近区块，不包含当前区块
+- `blockhash(uint blockNumber)`:(`bytes32`)给定区块的哈希值 - 只适用于 256 个最近区块，不包含当前区块
 - `block.coinbase`:(`address payable`)当前区块矿工的地址
-- `block.gaslimit`:(`uint`)当前区块的gas limit
-- `block.number`:(`uint`)当前区块的number
-- `block.timestamp`:(`uint`)当前区块的时间戳，为unix纪元以来的秒
-- `gasleft()`:(`uint256`)剩余gas
-- `msg.data`:(`bytes calldata`)完整call data
-- `msg.sender`:(`address payable`)消息发送者(当前caller)
-- `msg.sig`:(`bytes4`)calldata的前四个字节(function identifier)
+- `block.gaslimit`:(`uint`)当前区块的 gas limit
+- `block.number`:(`uint`)当前区块的 number
+- `block.timestamp`:(`uint`)当前区块的时间戳，为 unix 纪元以来的秒
+- `gasleft()`:(`uint256`)剩余 gas
+- `msg.data`:(`bytes calldata`)完整 call data
+- `msg.sender`:(`address payable`)消息发送者(当前 caller)
+- `msg.sig`:(`bytes4`)calldata 的前四个字节(function identifier)
 - `msg.value`:(`uint`)当前交易发送的`wei`值
-- `block.blobbasefee`:(`uint`)当前区块的blob基础费用。这是Cancun升级新增的全局变量
-- `blobhash(uint index)`:(`bytes32`)返回跟当前交易管理的第`index`个blob的版本化哈希（第一个字节为版本号，当前应为`0x01`，后面接KZG承诺的SHA256哈希的最后31个字节）。若当前交易不包含blob，则返回空字节。这是Cancun升级新增的全局变量
+- `block.blobbasefee`:(`uint`)当前区块的 blob 基础费用。这是 Cancun 升级新增的全局变量
+- `blobhash(uint index)`:(`bytes32`)返回跟当前交易管理的第`index`个 blob 的版本化哈希（第一个字节为版本号，当前应为`0x01`，后面接 KZG 承诺的 SHA256 哈希的最后 31 个字节）。若当前交易不包含 blob，则返回空字节。这是 Cancun 升级新增的全局变量
 
 ###### 4. 全局变量 - 以太单位与时间单位
 
 **以太单位**
 
-solidity中不存在小数点，以大整型数代替，来确保交易的精确度，并且防止精度损失，利用以太单位可以避免无算的问题，方便在合约中处理货币交易。
+solidity 中不存在小数点，以大整型数代替，来确保交易的精确度，并且防止精度损失，利用以太单位可以避免无算的问题，方便在合约中处理货币交易。
 
 - `wei`: 1
 - `gwei`: 1e9 = 1000000000
@@ -555,7 +556,7 @@ function etherUnit() external pure returns(uint) {
 
 **时间单位**
 
-可以在合约中规定一个操作必须在一周内完成，或者某个时间在一个月后发送。这样就能让合约的执行更加精确，不会应为技术上的误差而影响合约的结果。因此，时间单位在solidity中是一个重要的概念，有助于提高合约的可读性和可维护性。
+可以在合约中规定一个操作必须在一周内完成，或者某个时间在一个月后发送。这样就能让合约的执行更加精确，不会应为技术上的误差而影响合约的结果。因此，时间单位在 solidity 中是一个重要的概念，有助于提高合约的可读性和可维护性。
 
 - `seconds`: 1
 - `minutes`: 60 seconds == 60
@@ -596,7 +597,7 @@ function weeksUnit() external pure returns(uint) {
 
 ## 3. solidity 控制流
 
-solidity控制流与其他语言类似，主要包含一下几种：
+solidity 控制流与其他语言类似，主要包含一下几种：
 
 1. `if-else`
 
@@ -655,7 +656,7 @@ function doWhileTest() public pure returns(uint256){
 ```js
 function ternaryTest(uint256 x, uint256 y) public pure returns(uint256){
     // return the max of x and y
-    return x >= y ? x: y; 
+    return x >= y ? x: y;
 }
 ```
 
@@ -673,11 +674,11 @@ constructor(address initialOwner) {
 }
 ```
 
-**注意**：构造函数在不同solidity版本中的语法并不一致，在solidity 0.4.22之前，构造函数不使用`constructor`而是使用与合约名同名的函数作为构造函数。由于这种旧写法容易使开发这在书写时发生疏漏（如合约名为`Parents`，构造函数名写成`parents`），使构造函数变长普通函数，引发漏洞，所以在0.4.22版本及以后，采用了`constructor`写法。
+**注意**：构造函数在不同 solidity 版本中的语法并不一致，在 solidity 0.4.22 之前，构造函数不使用`constructor`而是使用与合约名同名的函数作为构造函数。由于这种旧写法容易使开发这在书写时发生疏漏（如合约名为`Parents`，构造函数名写成`parents`），使构造函数变长普通函数，引发漏洞，所以在 0.4.22 版本及以后，采用了`constructor`写法。
 
 ### 4.2 修饰器
 
-修饰器（`modifier`）是solidity特有的语法，类似于面向对象编程中的装饰器（`decorator`），声明函数拥有的特性，并减少代码冗余。`modifier`的主要使用场景是运行函数前的检查，例如地址，变量，余额等。
+修饰器（`modifier`）是 solidity 特有的语法，类似于面向对象编程中的装饰器（`decorator`），声明函数拥有的特性，并减少代码冗余。`modifier`的主要使用场景是运行函数前的检查，例如地址，变量，余额等。
 
 ```js
 modifier onlyOwner {
@@ -692,10 +693,10 @@ function changeOwner(address _newOwner) external onlyOwner{
 
 ## 5. solidity 事件
 
-solidity中的事件`event`是`EVM`上日志的抽象，它具有两个特点：
+solidity 中的事件`event`是`EVM`上日志的抽象，它具有两个特点：
 
-- 响应：应用程序（如`ether.js`）可以通过RPC接口订阅和监听这些事件，并在前端做响应。
-- 经济：事件是`EVM`上比较经济的存储数据的方式，每个大概消耗2000gas；相比之下，链上存储一个新变量至少需要20000gas。
+- 响应：应用程序（如`ether.js`）可以通过 RPC 接口订阅和监听这些事件，并在前端做响应。
+- 经济：事件是`EVM`上比较经济的存储数据的方式，每个大概消耗 2000gas；相比之下，链上存储一个新变量至少需要 20000gas。
 
 ### 声明事件
 
@@ -705,7 +706,7 @@ solidity中的事件`event`是`EVM`上日志的抽象，它具有两个特点：
 event Transfer(address indexed from, address indexed to, uint256 value);
 ```
 
-`Transfer`事件共记录了3个变量`from`,`to`,`value`，分别对应代币的转账地址，接收地址和转账数量，其中`from`和`to`前面带有`indexed`关键字，它们会保存在`EVM`日志的`topics`中，方便以后检索。
+`Transfer`事件共记录了 3 个变量`from`,`to`,`value`，分别对应代币的转账地址，接收地址和转账数量，其中`from`和`to`前面带有`indexed`关键字，它们会保存在`EVM`日志的`topics`中，方便以后检索。
 
 ### 释放事件
 
@@ -728,27 +729,27 @@ function _transfer(
 }
 ```
 
-### EVM日志
+### EVM 日志
 
-以太坊虚拟机（EVM）用日志`Log`来存储solidity事件，每条日志记录都包含主题`topics`和数据`data`两部分。
+以太坊虚拟机（EVM）用日志`Log`来存储 solidity 事件，每条日志记录都包含主题`topics`和数据`data`两部分。
 
 #### 主题`topics`
 
-日志的第一部分是主题数组，用于描述事件，长度不能超过4.它的第一个元素是事件的签名（哈希）。对于上面的`Transfer`事件，它的事件哈希就是：
+日志的第一部分是主题数组，用于描述事件，长度不能超过 4.它的第一个元素是事件的签名（哈希）。对于上面的`Transfer`事件，它的事件哈希就是：
 
 ```js
-keccak256("Transfer(address,address,uint256)")
+keccak256("Transfer(address,address,uint256)");
 
 //0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
 ```
 
-除了事件哈希，主题还可以包含至多3个`indexed`参数，也就是`Transfer`事件中的`from`和`to`。
+除了事件哈希，主题还可以包含至多 3 个`indexed`参数，也就是`Transfer`事件中的`from`和`to`。
 
-`indexed`标记的参数可以理解为检索事件的索引“键”，方便之后检索。每个`indexed`参数的大小为固定的256比特，如果参数太大了（比如字符串），就会自动计算哈希存储在主题中。
+`indexed`标记的参数可以理解为检索事件的索引“键”，方便之后检索。每个`indexed`参数的大小为固定的 256 比特，如果参数太大了（比如字符串），就会自动计算哈希存储在主题中。
 
 #### 数据`data`
 
-事件中不带`indexed`的参数会被存储在`data`部分中，可以理解为事件的“值”。`data`部分的变量不能被直接检索，但可以存储任意大小的数据。因此一般`data`部分可以用来存储复杂的数据结构，例如数组和字符串等，因为这些数据超过了256比特，即使存储在事件的`topics`部分中，也是以哈希的方式存储。另外，`data`部分的变量在存储上消耗的gas相比于`topics`更少。
+事件中不带`indexed`的参数会被存储在`data`部分中，可以理解为事件的“值”。`data`部分的变量不能被直接检索，但可以存储任意大小的数据。因此一般`data`部分可以用来存储复杂的数据结构，例如数组和字符串等，因为这些数据超过了 256 比特，即使存储在事件的`topics`部分中，也是以哈希的方式存储。另外，`data`部分的变量在存储上消耗的 gas 相比于`topics`更少。
 
 ## 6. solidity 继承
 
@@ -765,7 +766,7 @@ mapping(address => uint256) public override balanceOf;
 
 ### 简单继承
 
-先写一个简单的爷爷合约`Yeye`，里面包含1个`Log`事件和3个function: `hip()`, `pop()`, `yeye()`，输出都是“Yeye”。
+先写一个简单的爷爷合约`Yeye`，里面包含 1 个`Log`事件和 3 个 function: `hip()`, `pop()`, `yeye()`，输出都是“Yeye”。
 
 ```js
 contract Yeye {
@@ -803,11 +804,11 @@ contract Baba is Yeye {
 }
 ```
 
-部署合约，可以看到`Baba`合约里有4个函数，其中`hip()`和`pop()`的输出被成功改写成“Baba”，而继承来的`yeye()`的输出仍然是”Yeye”。
+部署合约，可以看到`Baba`合约里有 4 个函数，其中`hip()`和`pop()`的输出被成功改写成“Baba”，而继承来的`yeye()`的输出仍然是”Yeye”。
 
 ### 多重继承
 
-solidity的合约可以继承多个合约。规则：
+solidity 的合约可以继承多个合约。规则：
 
 1. 继承时要按辈分最高到最低的顺序排序。比如我们写一个`Erzi`合约，继承`Yeye`合约和`Baba`合约，那么就要写成`contract Erzi is Yeye, Baba`，而不能写成`contract Erzi is Baba, Yeye`，不然就会报错。
 2. 如果某一个函数在多个继承的合约里都存在，比如例子中的`hip()`和`pop()`，在子合约里必须重写，不然会报错。
@@ -827,7 +828,7 @@ contract Erzi is Yeye, Baba {
 
 #### 修饰器的继承
 
-solidity中的修饰器（`Modifier`）同样可以继承，用法与函数继承类似，在相应的地方加`virtual`和`override`关键字即可。
+solidity 中的修饰器（`Modifier`）同样可以继承，用法与函数继承类似，在相应的地方加`virtual`和`override`关键字即可。
 
 ```js
 contract Base1 {
@@ -897,7 +898,7 @@ function callParent() public {
 }
 ```
 
-2. `super`关键字：子合约可以利用`super.函数名()`来调用最近的父合约函数。solidity继承关系按声明时从右到左的顺序是：`contract Erzi is Yeye, Baba`，那么`Baba`是最近的父合约，`super.pop()`将调用`Baba.pop()`而不是`Yeye.pop()`：
+2. `super`关键字：子合约可以利用`super.函数名()`来调用最近的父合约函数。solidity 继承关系按声明时从右到左的顺序是：`contract Erzi is Yeye, Baba`，那么`Baba`是最近的父合约，`super.pop()`将调用`Baba.pop()`而不是`Yeye.pop()`：
 
 ```js
 function callParentSuper() public {
@@ -972,7 +973,7 @@ contract people is Adam, Eve {
 
 在这个例子中，调用合约`people`中的`super.bar()`会依次调用`Eve`,`Adam`，最后是`God`合约。
 
-虽然`Eve`,`Adam`都是`God`的子合约，但整个过程中`God`合约只会被调用一次。原因是solidity借鉴了Python的方式，强制构建一个由基类构成的DAG（有向无环图）使其保证一个特定的顺序。更多细节可查阅[solidity官方文档](https://solidity-cn.readthedocs.io/zh/develop/contracts.html?highlight=%E7%BB%A7%E6%89%BF#index-16)。
+虽然`Eve`,`Adam`都是`God`的子合约，但整个过程中`God`合约只会被调用一次。原因是 solidity 借鉴了 Python 的方式，强制构建一个由基类构成的 DAG（有向无环图）使其保证一个特定的顺序。更多细节可查阅[solidity 官方文档](https://solidity-cn.readthedocs.io/zh/develop/contracts.html?highlight=%E7%BB%A7%E6%89%BF#index-16)。
 
 ## 7. solidity 抽象合约和接口
 
@@ -987,24 +988,24 @@ contract people is Adam, Eve {
 1. 不能包含状态变量
 2. 不能包含构造函数
 3. 不能继承除接口外的其他合约
-4. 所有函数都必须是external且不能有函数体
+4. 所有函数都必须是 external 且不能有函数体
 5. 继承接口的非抽象合约必须实现接口定义的所有功能
 
-虽然接口不是闲任何功能，但它非常重要。接口是智能合约的骨架，定义了合约的功能以及如何触发它们：如果智能合约实现了某种接口（比如`ERC20`或`ERC721`），其他DApps和智能合约就知道如何与它交互。因为接口提供了两个重要的信息：
+虽然接口不是闲任何功能，但它非常重要。接口是智能合约的骨架，定义了合约的功能以及如何触发它们：如果智能合约实现了某种接口（比如`ERC20`或`ERC721`），其他 DApps 和智能合约就知道如何与它交互。因为接口提供了两个重要的信息：
 
 1. 合约里每个函数的`bytes4`选择器，以及函数签名`函数名(每个参数类型)`。
-2. 接口id（更多信息见[EIP165](https://eips.ethereum.org/EIPS/eip-165)）
+2. 接口 id（更多信息见[EIP165](https://eips.ethereum.org/EIPS/eip-165)）
 
-另外，接口与合约`ABI`（Application Binary Interface）等价，可以相互转换：编译接口可以得到合约的`ABI`，利用[abi-to-sol工具](https://gnidan.github.io/abi-to-sol/)，也可以将`ABI json`文件转换为`接口sol`文件。
+另外，接口与合约`ABI`（Application Binary Interface）等价，可以相互转换：编译接口可以得到合约的`ABI`，利用[abi-to-sol 工具](https://gnidan.github.io/abi-to-sol/)，也可以将`ABI json`文件转换为`接口sol`文件。
 
-以`ERC721`接口合约`IERC721`为例，它定义了3个`event`和9个`function`，所有`ERC721`标准的NFT都实现了这些函数。可以看到，接口和常规合约的区别在于每个函数都以`;`代替函数体`{}`结尾。
+以`ERC721`接口合约`IERC721`为例，它定义了 3 个`event`和 9 个`function`，所有`ERC721`标准的 NFT 都实现了这些函数。可以看到，接口和常规合约的区别在于每个函数都以`;`代替函数体`{}`结尾。
 
 ```js
 interface IERC721 is IERC165 {
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
     event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-    
+
     function balanceOf(address owner) external view returns (uint256 balance);
 
     function ownerOf(uint256 tokenId) external view returns (address owner);
@@ -1025,24 +1026,24 @@ interface IERC721 is IERC165 {
 }
 ```
 
-#### IERC721事件
+#### IERC721 事件
 
-`IERC721`包含3个事件，其中`Transfer`和`Approval`事件在`Erc20`中也有。
+`IERC721`包含 3 个事件，其中`Transfer`和`Approval`事件在`Erc20`中也有。
 
 - `Transfer`事件：在转账时被释放，记录代币的发出地址`from`，接收地址`to`和`tokenId`。
 - `Approval`事件：在授权时被释放，记录授权地址`owner`，被授权地址`approved`和`tokenId`。
 - `ApprovalForAll`事件：在批量授权时被释放，记录批量授权的发出地址`owner`，被授权地址`operator`和授权与否的`approved`。
 
-#### IERC721函数
+#### IERC721 函数
 
-- `balanceOf`：返回某地址的NFT持有量`balance`。
+- `balanceOf`：返回某地址的 NFT 持有量`balance`。
 - `ownerOf`：返回某`tokenId`的主人`owner`。
 - `transferFrom`：普通转账，参数为转出地址`from`，接收地址`to`和`tokenId`.
 - `safeTransferFrom`：安全转账（如果接收方是合约地址，会要求实现`ERC721Receiver`接口）。参数为转出地址`from`，接收地址`to`和`tokenId`。
-- `approve`：授权另一个地址使用你的NFT。参数为被授权地址`approve`和`tokenId`。
+- `approve`：授权另一个地址使用你的 NFT。参数为被授权地址`approve`和`tokenId`。
 - `getApproved`：查询`tokenId`被批准给了哪个地址。
-- `setApprovalForAll`：将自己持有的该系列NFT批量授权给某个地址`operator`。
-- `isApprovedForAll`：查询某地址的NFT是否批量授权给了另一个`operator`地址。
+- `setApprovalForAll`：将自己持有的该系列 NFT 批量授权给某个地址`operator`。
+- `isApprovedForAll`：查询某地址的 NFT 是否批量授权给了另一个`operator`地址。
 - `safeTransferFrom`：安全转账的重载函数，参数里面包含了`data`。
 
 #### 什么时候使用接口？
@@ -1070,11 +1071,11 @@ contract interactBAYC {
 
 ## 8. solidity 异常
 
-合约编写中难以避免会出现bug，异常能够帮助我们进行debug。solidity中三种抛出异常的方法：`error`,`require`,`assert`。
+合约编写中难以避免会出现 bug，异常能够帮助我们进行 debug。solidity 中三种抛出异常的方法：`error`,`require`,`assert`。
 
 ### Error
 
-`error`是solidity 0.8.4版本新加的内容，方便且高效（省gas）地向用户解释操作失败的原因，同时还可以在抛出异常的同时携带参数，帮助开发者更好地调试。人们可以在`contract`之外定义异常。下面我们定义一个`TransferNotOwner`的异常，当用户不是代币`owner`但却尝试转账时，抛出错误：
+`error`是 solidity 0.8.4 版本新加的内容，方便且高效（省 gas）地向用户解释操作失败的原因，同时还可以在抛出异常的同时携带参数，帮助开发者更好地调试。人们可以在`contract`之外定义异常。下面我们定义一个`TransferNotOwner`的异常，当用户不是代币`owner`但却尝试转账时，抛出错误：
 
 ```js
 error TransferNotOwner(); // 自定义error
@@ -1098,7 +1099,7 @@ function transferOwner1(uint256 tokenId, address newOwner) public {
 
 ### Require
 
-`require`命令是solidity 0.8版本之前的抛出异常的常用方法，目前很多主流合约仍然还在使用它。它很好用，唯一的缺点就是gas随着描述异常的字符串长度增加，比`error`命令要高。使用方法：`require(检查条件,"异常的描述")`，当检查条件不成立的时候，就会抛出异常。
+`require`命令是 solidity 0.8 版本之前的抛出异常的常用方法，目前很多主流合约仍然还在使用它。它很好用，唯一的缺点就是 gas 随着描述异常的字符串长度增加，比`error`命令要高。使用方法：`require(检查条件,"异常的描述")`，当检查条件不成立的时候，就会抛出异常。
 
 ```js
 function transferOwner2(uint256 tokenId, address newOwner) public {
@@ -1109,7 +1110,7 @@ function transferOwner2(uint256 tokenId, address newOwner) public {
 
 ### Assert
 
-`assert`命令一般用于程序员写程序时debug，因为它不能解释抛出异常的原因（比`require`少个字符串）。它的用法很简单，`assert(检查条件)`，当检查条件不成立的时候，就会抛出异常。
+`assert`命令一般用于程序员写程序时 debug，因为它不能解释抛出异常的原因（比`require`少个字符串）。它的用法很简单，`assert(检查条件)`，当检查条件不成立的时候，就会抛出异常。
 
 ```js
 function transferOwner3(uint256 tokenId, address newOwner) public {
@@ -1118,14 +1119,14 @@ function transferOwner3(uint256 tokenId, address newOwner) public {
 }
 ```
 
-### 三种方法的gas比较
+### 三种方法的 gas 比较
 
-通过remix控制台，能够查到每次函数调用的gas消耗（使用solidity 0.8.17版本编译）：
+通过 remix 控制台，能够查到每次函数调用的 gas 消耗（使用 solidity 0.8.17 版本编译）：
 
-1. `error`方法gas消耗：24457（加入参数后gas消耗：24660）
-2. `require`方法gas消耗：24755
-3. `assert`方法gas消耗：24473
+1. `error`方法 gas 消耗：24457（加入参数后 gas 消耗：24660）
+2. `require`方法 gas 消耗：24755
+3. `assert`方法 gas 消耗：24473
 
-可以看到，`error`方法gas消耗最少，其次是`assert`，`require`消耗gas最多。因此，应尽量使用`error`。（注意，由于部署测试时间的不同，每个函数的gas消耗会有所不同，但是比较结果会是一致的。）
+可以看到，`error`方法 gas 消耗最少，其次是`assert`，`require`消耗 gas 最多。因此，应尽量使用`error`。（注意，由于部署测试时间的不同，每个函数的 gas 消耗会有所不同，但是比较结果会是一致的。）
 
-**备注**: solidity 0.8.0之前的版本，`assert`抛出的是一个`panic exception`，会把剩余的 gas 全部消耗，不会返还。更多细节见[官方文档](https://docs.soliditylang.org/en/v0.8.17/control-structures.html)。
+**备注**: solidity 0.8.0 之前的版本，`assert`抛出的是一个`panic exception`，会把剩余的 gas 全部消耗，不会返还。更多细节见[官方文档](https://docs.soliditylang.org/en/v0.8.17/control-structures.html)。

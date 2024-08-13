@@ -2,7 +2,7 @@
 
 ## 1. ERC20
 
-`ERC20`是以太坊上的代币标准，来自2015年11月V神参与的[EIP20](https://eips.ethereum.org/EIPS/eip-20)。它实现了代币转账的基本逻辑：
+`ERC20`是以太坊上的代币标准，来自 2015 年 11 月 V 神参与的[EIP20](https://eips.ethereum.org/EIPS/eip-20)。它实现了代币转账的基本逻辑：
 
 - 账户余额（`balanceOf()`）
 - 转账（`transfer()`）
@@ -18,7 +18,7 @@
 
 ### 1.2 事件
 
-`IERC20`定义了2个事件：`Transfer`事件和`Approval`事件，分别在转账和授权时被释放
+`IERC20`定义了 2 个事件：`Transfer`事件和`Approval`事件，分别在转账和授权时被释放
 
 ```js
 /**
@@ -34,7 +34,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value);
 
 ### 1.3 函数
 
-`IERC20`定义了6个函数，提供了转移代币的基本功能，并允许代币获得批准，以便其他链上第三方使用。
+`IERC20`定义了 6 个函数，提供了转移代币的基本功能，并允许代币获得批准，以便其他链上第三方使用。
 
 - `totalSupply()`返回代币总供给
 
@@ -108,7 +108,7 @@ function transferFrom(
 ) external returns (bool);
 ```
 
-### 1.4 实现ERC20
+### 1.4 实现 ERC20
 
 #### 1.4.1 状态变量
 
@@ -151,7 +151,7 @@ function transfer(address recipient, uint amount) public override returns (bool)
 }
 ```
 
-- `approve()`函数：实现`IERC20`中的`approve`函数，代币授权逻辑。被授权方`spender`可以支配授权方的`amount`数量的代币。`spender`可以是`EOA`账户，也可以是合约账户：当你用uniswap交易代币时，你需要将代币授权给uniswap合约。
+- `approve()`函数：实现`IERC20`中的`approve`函数，代币授权逻辑。被授权方`spender`可以支配授权方的`amount`数量的代币。`spender`可以是`EOA`账户，也可以是合约账户：当你用 uniswap 交易代币时，你需要将代币授权给 uniswap 合约。
 
 ```js
 function approve(address spender, uint amount) public override returns (bool) {
@@ -201,18 +201,18 @@ function burn(uint amount) external {
 
 代币水龙头是让用户免费领取代币的应用。
 
-最早的代币水龙头是比特币（BTC）水龙头：在2010年，BTC的价格只有不到$0.1，并且持有人很少。为了扩大影响力，比特币社区的Gavin Andresen开发了BTC水龙头，让别人可以免费领BTC。撸羊毛大家都喜欢，当时就有很多人去撸，一部分变为了BTC的信徒。BTC水龙头一共送出了超过19,700枚BTC，现在价值约6亿美元！
+最早的代币水龙头是比特币（BTC）水龙头：在 2010 年，BTC 的价格只有不到$0.1，并且持有人很少。为了扩大影响力，比特币社区的 Gavin Andresen 开发了 BTC 水龙头，让别人可以免费领 BTC。撸羊毛大家都喜欢，当时就有很多人去撸，一部分变为了 BTC 的信徒。BTC 水龙头一共送出了超过 19,700 枚 BTC，现在价值约 6 亿美元！
 
-### 2.1 ERC20水龙头合约
+### 2.1 ERC20 水龙头合约
 
-这里，我们实现一个简版的ERC20水龙头，逻辑非常简单：我们将一些ERC20代币转到水龙头合约里，用户可以通过合约的`requestToken()`函数来领取100单位的代币，每个地址只能领一次。
+这里，我们实现一个简版的 ERC20 水龙头，逻辑非常简单：我们将一些 ERC20 代币转到水龙头合约里，用户可以通过合约的`requestToken()`函数来领取 100 单位的代币，每个地址只能领一次。
 
 #### 2.1.1 状态变量
 
-在水龙头合约中定义了3个状态变量
+在水龙头合约中定义了 3 个状态变量
 
-- `amountAllowed`设定每次能领取代币数量（默认为100，不是一百枚，因为代币有小数位数）
-- `tokenContract`记录发放的ERC20代币合约地址
+- `amountAllowed`设定每次能领取代币数量（默认为 100，不是一百枚，因为代币有小数位数）
+- `tokenContract`记录发放的 ERC20 代币合约地址
 - `requestedAddress`记录领取过代币的地址
 
 ```js
@@ -223,7 +223,7 @@ mapping(address => bool) public requestedAddress;   // 记录领取过代币的�
 
 #### 2.1.2 事件
 
-水龙头合约中定义了1个`SendToken`事件，记录了每次领取代币的地址和数量，在`requestTokens()`函数被调用时释放。
+水龙头合约中定义了 1 个`SendToken`事件，记录了每次领取代币的地址和数量，在`requestTokens()`函数被调用时释放。
 
 ```js
 // SendToken事件
@@ -234,7 +234,7 @@ event SendToken(address indexed Receiver, uint256 indexed Amount);
 
 合约中只有两个函数：
 
-- 构造函数：初始化`tokenContract`状态变量，确定发放的ERC20代币地址
+- 构造函数：初始化`tokenContract`状态变量，确定发放的 ERC20 代币地址
 
 ```js
 // 部署时设定ERC20代币合约
@@ -263,13 +263,13 @@ function requestTokens() external {
 
 空投（Airdrop）是币圈中一种营销策略，项目方将代币免费发放给特定用户群体。为了拿到空投资格，用户通常需要完成一些简单的任务，如测试产品、分享新闻、介绍朋友等。项目方通过空投可以获得种子用户，而用户可以获得一笔财富，两全其美。
 
-因为每次接收空投的用户很多，项目方不可能一笔一笔的转账。利用智能合约批量发放ERC20代币，可以显著提高空投效率。
+因为每次接收空投的用户很多，项目方不可能一笔一笔的转账。利用智能合约批量发放 ERC20 代币，可以显著提高空投效率。
 
 ### 3.1 空投代币合约
 
-`Airdrop`空投合约逻辑非常简单：利用循环，一笔交易将ERC20代币发送给多个地址。合约中包含两个函数：
+`Airdrop`空投合约逻辑非常简单：利用循环，一笔交易将 ERC20 代币发送给多个地址。合约中包含两个函数：
 
-- `getSum()`函数：返回uint数组的和
+- `getSum()`函数：返回 uint 数组的和
 
 ```js
 // 数组求和函数
@@ -279,7 +279,7 @@ function getSum(uint256[] calldata _arr) public pure returns(uint sum){
 }
 ```
 
-- `multiTransferToken()`函数：用于发送ERC20代币空投，包含3个参数：
+- `multiTransferToken()`函数：用于发送 ERC20 代币空投，包含 3 个参数：
   - `_token`：代币合约地址（`address`类型）
   - `_addresses`：接收空投的用户地址数组（`address[]`类型）
   - `_amounts`：空投数量数组，对应`_addresses`里每个地址的数量（`uint[]`类型）
@@ -311,7 +311,7 @@ function multiTransferToken(
 }
 ```
 
-- `multiTransferETH()`函数：发送ETH空投，包含2个参数
+- `multiTransferETH()`函数：发送 ETH 空投，包含 2 个参数
   - `_addresses`：接收空投的用户地址数组（`address[]`类型）
   - `_amounts`：空投数量数组，对应`_addresses`里每个地址的数量（`uint[]`类型）
 
@@ -341,17 +341,17 @@ function multiTransferETH(
 
 ## 4. ERC721
 
-BTC和ETH这类代币都属于同质化代币，矿工挖出的第1枚BTC与第10000枚BTC并没有不同，是等价的。但世界中很多物品是不同质的，其中包括房产、古董、虚拟艺术品等等，这类物品无法用同质化代币抽象。因此，以太坊[EIP721](https://eips.ethereum.org/EIPS/eip-721)提出了ERC721标准，来抽象非同质化的物品。
+BTC 和 ETH 这类代币都属于同质化代币，矿工挖出的第 1 枚 BTC 与第 10000 枚 BTC 并没有不同，是等价的。但世界中很多物品是不同质的，其中包括房产、古董、虚拟艺术品等等，这类物品无法用同质化代币抽象。因此，以太坊[EIP721](https://eips.ethereum.org/EIPS/eip-721)提出了 ERC721 标准，来抽象非同质化的物品。
 
-### 4.0 EIP与ERC
+### 4.0 EIP 与 ERC
 
 这里有一个点需要理解，本节标题是`ERC721`，这里又提到了`EIP721`,这两个是什么关系呢？
 
 `EIP`全称`Ethereum Improvement Proposals`(以太坊改进建议), 是以太坊开发者社区提出的改进建议, 是一系列以编号排定的文件, 类似互联网上`IETF`的`RFC`。
 
-`EIP`可以是Ethereum生态中任意领域的改进, 比如新特性、ERC、协议改进、编程工具等等。
+`EIP`可以是 Ethereum 生态中任意领域的改进, 比如新特性、ERC、协议改进、编程工具等等。
 
-`ERC`全称`Ethereum Request For Comment`(以太坊意见征求稿), 用以记录以太坊上应用级的各种开发标准和协议。如典型的Token标准(`ERC20`, `ERC721`)、名字注册(`ERC26`, `ERC13`), URI范式(`ERC67`), Library/Package格式(`EIP82`), 钱包格式(`EIP75`,`EIP85`)。
+`ERC`全称`Ethereum Request For Comment`(以太坊意见征求稿), 用以记录以太坊上应用级的各种开发标准和协议。如典型的 Token 标准(`ERC20`, `ERC721`)、名字注册(`ERC26`, `ERC13`), URI 范式(`ERC67`), Library/Package 格式(`EIP82`), 钱包格式(`EIP75`,`EIP85`)。
 
 `ERC`协议标准是影响以太坊发展的重要因素, 像`ERC20`, `ERC223`, `ERC721`, `ERC777`等, 都是对以太坊生态产生了很大影响。
 
@@ -359,9 +359,9 @@ BTC和ETH这类代币都属于同质化代币，矿工挖出的第1枚BTC与第1
 
 ### 4.1 ERC165
 
-通过[ERC165标准](https://eips.ethereum.org/EIPS/eip-165)，智能合约可以声明它支持的接口，供其他合约检查。简单的说，`ERC165`就是检查一个智能合约是不是支持了`ERC721`，`ERC1155`的接口。
+通过[ERC165 标准](https://eips.ethereum.org/EIPS/eip-165)，智能合约可以声明它支持的接口，供其他合约检查。简单的说，`ERC165`就是检查一个智能合约是不是支持了`ERC721`，`ERC1155`的接口。
 
-`IERC165`接口合约只声明了一个`supportsInterface`函数，输入要查询的interfaceId接口id，若合约实现了该接口id，则返回`true`：
+`IERC165`接口合约只声明了一个`supportsInterface`函数，输入要查询的 interfaceId 接口 id，若合约实现了该接口 id，则返回`true`：
 
 ```js
 interface IERC165 {
@@ -385,13 +385,13 @@ interface IERC165 {
     }
 ```
 
-当查询的是`IERC721`或`IERC165`的接口id时，返回`true`；反之返回`false`。
+当查询的是`IERC721`或`IERC165`的接口 id 时，返回`true`；反之返回`false`。
 
 ### 4.2 IERC721
 
 `IERC721`是`ERC721`标准的接口合约，规定了`ERC721`要实现的基本函数。它利用`tokenId`来表示特定的非同质化代币，授权或转账都要明确`tokenId`；而`ERC20`只需要明确转账的数额即可。
 
-#### 4.2.1 IERC接口
+#### 4.2.1 IERC 接口
 
 ```js
 /**
@@ -435,29 +435,29 @@ interface IERC721 is IERC165 {
 }
 ```
 
-#### 4.2.2 IERC721事件
+#### 4.2.2 IERC721 事件
 
-`IERC721`包含3个事件，其中`Transfer`和`Approval`事件在`ERC20`中也有。
+`IERC721`包含 3 个事件，其中`Transfer`和`Approval`事件在`ERC20`中也有。
 
 - `Transfer`事件：在转账时被释放，记录代币的发出地址`from`，接收地址`to`和`tokenid`。
 - `Approval`事件：在授权时释放，记录授权地址`owner`，被授权地址`approved`和`tokenid`。
 - `ApprovalForAll`事件：在批量授权时释放，记录批量授权的发出地址`owner`，被授权地址`operator`和授权与否的`approved`。
 
-#### 4.2.3 IERC721函数
+#### 4.2.3 IERC721 函数
 
-- `balanceOf`：返回某地址的NFT持有量balance。
-- `ownerOf`：返回某tokenId的主人owner。
-- `transferFrom`：普通转账，参数为转出地址from，接收地址to和tokenId。
-- `safeTransferFrom`：安全转账（如果接收方是合约地址，会要求实现ERC721Receiver接口）。参数为转出地址from，接收地址to和tokenId。
-- `approve`：授权另一个地址使用你的NFT。参数为被授权地址approve和tokenId。
-- `getApproved`：查询tokenId被批准给了哪个地址。
-- `setApprovalForAll`：将自己持有的该系列NFT批量授权给某个地址operator。
-- `isApprovedForAll`：查询某地址的NFT是否批量授权给了另一个operator地址。
-- `safeTransferFrom`：安全转账的重载函数，参数里面包含了data。
+- `balanceOf`：返回某地址的 NFT 持有量 balance。
+- `ownerOf`：返回某 tokenId 的主人 owner。
+- `transferFrom`：普通转账，参数为转出地址 from，接收地址 to 和 tokenId。
+- `safeTransferFrom`：安全转账（如果接收方是合约地址，会要求实现 ERC721Receiver 接口）。参数为转出地址 from，接收地址 to 和 tokenId。
+- `approve`：授权另一个地址使用你的 NFT。参数为被授权地址 approve 和 tokenId。
+- `getApproved`：查询 tokenId 被批准给了哪个地址。
+- `setApprovalForAll`：将自己持有的该系列 NFT 批量授权给某个地址 operator。
+- `isApprovedForAll`：查询某地址的 NFT 是否批量授权给了另一个 operator 地址。
+- `safeTransferFrom`：安全转账的重载函数，参数里面包含了 data。
 
 #### 4.2.4 IERC721Receiver
 
-如果一个合约没有实现`ERC721`的相关函数，转入的NFT就进了黑洞，永远转不出来了。为了防止误转账，`ERC721`实现了`safeTransferFrom()`安全转账函数，目标合约必须实现了`IERC721Receiver`接口才能接收`ERC721`代币，不然会`revert`。`IERC721Receiver`接口只包含一个`onERC721Received()`函数。
+如果一个合约没有实现`ERC721`的相关函数，转入的 NFT 就进了黑洞，永远转不出来了。为了防止误转账，`ERC721`实现了`safeTransferFrom()`安全转账函数，目标合约必须实现了`IERC721Receiver`接口才能接收`ERC721`代币，不然会`revert`。`IERC721Receiver`接口只包含一个`onERC721Received()`函数。
 
 ```js
 // ERC721接收者接口：合约必须实现这个接口来通过安全转账接收ERC721
@@ -504,11 +504,11 @@ function _checkOnERC721Received(
 
 #### 4.2.5 IERC721Metadata
 
-`IERC721Metadata`是`ERC721`的拓展接口，实现了3个查询metadata元数据的常用函数：
+`IERC721Metadata`是`ERC721`的拓展接口，实现了 3 个查询 metadata 元数据的常用函数：
 
 - `name()`：返回代币名称。
 - `symbol()`：返回代币代号。
-- `tokenURI()`：通过tokenId查询metadata的链接url，ERC721特有的函数。
+- `tokenURI()`：通过 tokenId 查询 metadata 的链接 url，ERC721 特有的函数。
 
 ```js
 interface IERC721Metadata is IERC721 {
@@ -520,9 +520,9 @@ interface IERC721Metadata is IERC721 {
 }
 ```
 
-### 4.3 ERC721主合约
+### 4.3 ERC721 主合约
 
-`ERC721`主合约实现了`IERC721`，`IERC165`和`IERC721Metadata`定义的所有功能，包含4个状态变量和17个函数。实现都比较简单，每个函数的功能见代码注释：
+`ERC721`主合约实现了`IERC721`，`IERC165`和`IERC721Metadata`定义的所有功能，包含 4 个状态变量和 17 个函数。实现都比较简单，每个函数的功能见代码注释：
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -793,9 +793,9 @@ contract ERC721 is IERC721, IERC721Metadata{
 
 ```
 
-### 4.4 ERC165与ERC721详解
+### 4.4 ERC165 与 ERC721 详解
 
-上面说到,为了防止NFT被转到一个没有能力操作NFT的合约中去,目标必须正确实现`ERC721TokenReceiver`接口：
+上面说到,为了防止 NFT 被转到一个没有能力操作 NFT 的合约中去,目标必须正确实现`ERC721TokenReceiver`接口：
 
 ```js
 interface ERC721TokenReceiver {
@@ -803,13 +803,13 @@ interface ERC721TokenReceiver {
 }
 ```
 
-拓展到编程语言的世界中去，无论是Java的interface，还是Rust的Trait(当然solidity中和trait更像的是library)，只要是和接口沾边的，都在透露着一种这样的意味：接口是某些行为的集合(在solidity中更甚，接口完全等价于函数选择器的集合)，某个类型只要实现了某个接口，就表明该类型拥有这样的一种功能。因此，只要某个contract类型实现了上述的`ERC721TokenReceiver`接口(更具体而言就是实现了`onERC721Received`这个函数),该contract类型就对外表明了自己拥有管理NFT的能力。当然操作NFT的逻辑被实现在该合约其他的函数中。 ERC721标准在执行`safeTransferFrom`的时候会检查目标合约是否实现了`onERC721Received`函数,这是一种利用ERC165思想进行的操作。
+拓展到编程语言的世界中去，无论是 Java 的 interface，还是 Rust 的 Trait(当然 solidity 中和 trait 更像的是 library)，只要是和接口沾边的，都在透露着一种这样的意味：接口是某些行为的集合(在 solidity 中更甚，接口完全等价于函数选择器的集合)，某个类型只要实现了某个接口，就表明该类型拥有这样的一种功能。因此，只要某个 contract 类型实现了上述的`ERC721TokenReceiver`接口(更具体而言就是实现了`onERC721Received`这个函数),该 contract 类型就对外表明了自己拥有管理 NFT 的能力。当然操作 NFT 的逻辑被实现在该合约其他的函数中。 ERC721 标准在执行`safeTransferFrom`的时候会检查目标合约是否实现了`onERC721Received`函数,这是一种利用 ERC165 思想进行的操作。
 
-**那究竟什么是ERC165呢?**
+**那究竟什么是 ERC165 呢?**
 
-ERC165是一种对外表明自己实现了哪些接口的技术标准。就像上面所说的，实现了一个接口就表明合约拥有种特殊能力。有一些合约与其他合约交互时，期望目标合约拥有某些功能，那么合约之间就能够通过ERC165标准对对方进行查询以检查对方是否拥有相应的能力。
+ERC165 是一种对外表明自己实现了哪些接口的技术标准。就像上面所说的，实现了一个接口就表明合约拥有种特殊能力。有一些合约与其他合约交互时，期望目标合约拥有某些功能，那么合约之间就能够通过 ERC165 标准对对方进行查询以检查对方是否拥有相应的能力。
 
-以ERC721合约为例，当外部对某个合约进行检查其是否是ERC721时，[怎么做？](https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165) 。按照这个说法，检查步骤应该是首先检查该合约是否实现了ERC165, 再检查该合约实现的其他特定接口。此时该特定接口是IERC721. IERC721的是ERC721的基本接口(为什么说基本，是因为还有其他的诸如`ERC721Metadata`, `ERC721Enumerable`这样的拓展)：
+以 ERC721 合约为例，当外部对某个合约进行检查其是否是 ERC721 时，[怎么做？](https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165) 。按照这个说法，检查步骤应该是首先检查该合约是否实现了 ERC165, 再检查该合约实现的其他特定接口。此时该特定接口是 IERC721. IERC721 的是 ERC721 的基本接口(为什么说基本，是因为还有其他的诸如`ERC721Metadata`, `ERC721Enumerable`这样的拓展)：
 
 ```js
 /// 注意这个**0x80ac58cd**
@@ -841,9 +841,9 @@ interface ERC721 /* is ERC165 */ {
 }
 ```
 
-**0x80ac58cd**= `bytes4(keccak256(ERC721.Transfer.selector) ^ keccak256(ERC721.Approval.selector) ^ ··· ^keccak256(ERC721.isApprovedForAll.selector))`，这是ERC165规定的计算方式。
+**0x80ac58cd**= `bytes4(keccak256(ERC721.Transfer.selector) ^ keccak256(ERC721.Approval.selector) ^ ··· ^keccak256(ERC721.isApprovedForAll.selector))`，这是 ERC165 规定的计算方式。
 
-那么，类似的，能够计算出ERC165本身的接口(它的接口里只有一个`function supportsInterface(bytes4 interfaceID) external view returns (bool);`函数，对其进行`bytes4(keccak256(supportsInterface.selector))`得到**0x01ffc9a7**。此外，ERC721还定义了一些拓展接口，比如`ERC721Metadata`，长这样：
+那么，类似的，能够计算出 ERC165 本身的接口(它的接口里只有一个`function supportsInterface(bytes4 interfaceID) external view returns (bool);`函数，对其进行`bytes4(keccak256(supportsInterface.selector))`得到**0x01ffc9a7**。此外，ERC721 还定义了一些拓展接口，比如`ERC721Metadata`，长这样：
 
 ```js
 ///  Note: the ERC-165 identifier for this interface is 0x5b5e139f.
@@ -862,7 +862,7 @@ IERC721Metadata.name.selector ^
   IERC721Metadata.tokenURI.selector;
 ```
 
-solamte实现的ERC721.sol是怎么完成这些ERC165要求的特性的呢？
+solamte 实现的 ERC721.sol 是怎么完成这些 ERC165 要求的特性的呢？
 
 ```js
 function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -873,13 +873,13 @@ function supportsInterface(bytes4 interfaceId) public view virtual returns (bool
 }
 ```
 
-没错就这么简单。当外界按照[link1](https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165)的步骤去做检查的时候，如果外界想检查这个合约是否实现了165,好说，就是`supportsInterface`函数在入参是**0x01ffc9a7**时必须返回true，在入参是0xffffffff时，返回值必须是false。上述实现完美达成要求。
+没错就这么简单。当外界按照[link1](https://eips.ethereum.org/EIPS/eip-165#how-to-detect-if-a-contract-implements-erc-165)的步骤去做检查的时候，如果外界想检查这个合约是否实现了 165,好说，就是`supportsInterface`函数在入参是**0x01ffc9a7**时必须返回 true，在入参是 0xffffffff 时，返回值必须是 false。上述实现完美达成要求。
 
-当外界想检查这个合约是否是ERC721的时候，好说，入参是0x80ac58cd的时候表明外界想做这个检查。返回true。
+当外界想检查这个合约是否是 ERC721 的时候，好说，入参是 0x80ac58cd 的时候表明外界想做这个检查。返回 true。
 
-当外界想检查这个合约是否实现ERC721的拓展ERC721Metadata接口时，入参是0x5b5e139f。好说，返回了true。
+当外界想检查这个合约是否实现 ERC721 的拓展 ERC721Metadata 接口时，入参是 0x5b5e139f。好说，返回了 true。
 
-并且由于该函数是`virtual`的。因此该合约的使用者可以继承该合约，然后继续实现ERC721Enumerable接口。实现完里面的什么`totalSupply`之类的函数之后，把继承的`supportsInterface`重实现为
+并且由于该函数是`virtual`的。因此该合约的使用者可以继承该合约，然后继续实现 ERC721Enumerable 接口。实现完里面的什么`totalSupply`之类的函数之后，把继承的`supportsInterface`重实现为
 
 ```js
 function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -893,18 +893,18 @@ function supportsInterface(bytes4 interfaceId) public view virtual returns (bool
 
 **优雅，简洁，可拓展性拉满。**
 
-ERC721标准仍在不断发展中，目前比较流行的版本为ERC721Enumerable（提高NFT可访问性）和ERC721A（节约铸造gas）。
+ERC721 标准仍在不断发展中，目前比较流行的版本为 ERC721Enumerable（提高 NFT 可访问性）和 ERC721A（节约铸造 gas）。
 
 ## 5. 荷兰拍卖
 
 荷兰拍卖（Dutch Auction）是一种特殊的拍卖形式。 亦称“减价拍卖”，它是指拍卖标的的竞价由高到低依次递减直到第一个竞买人应价（达到或超过底价）时击槌成交的一种拍卖。
 
-在币圈，很多NFT通过荷兰拍卖发售，其中包括Azuki和World of Women，其中Azuki通过荷兰拍卖筹集了超过8000枚ETH。
+在币圈，很多 NFT 通过荷兰拍卖发售，其中包括 Azuki 和 World of Women，其中 Azuki 通过荷兰拍卖筹集了超过 8000 枚 ETH。
 
 项目方非常喜欢这种拍卖形式，主要有两个原因
 
 1. 荷兰拍卖的价格由最高慢慢下降，能让项目方获得最大的收入。
-2. 拍卖持续较长时间（通常6小时以上），可以避免gas war。
+2. 拍卖持续较长时间（通常 6 小时以上），可以避免 gas war。
 
 ### 5.1 `DutchAuction`合约
 
@@ -922,9 +922,9 @@ contract DutchAuction is Ownable, ERC721 {
 
 #### 5.1.1 `DutchAuction`状态变量
 
-合约中一共有9个状态变量，其中有6个和拍卖相关，他们是：
+合约中一共有 9 个状态变量，其中有 6 个和拍卖相关，他们是：
 
-- `COLLECTION_SIZE`：NFT总量。
+- `COLLECTION_SIZE`：NFT 总量。
 - `AUCTION_START_PRICE`：荷兰拍卖起拍价，也是最高价。
 - `AUCTION_END_PRICE`：荷兰拍卖结束价，也是最低价/地板价。
 - `AUCTION_TIME`：拍卖持续时长。
@@ -948,7 +948,7 @@ uint256[] private _allTokens; // 记录所有存在的tokenId
 
 #### 5.1.2 `DutchAuction`函数
 
-荷兰拍卖合约中共有9个函数，与ERC721相关的函数我们这里不再重复介绍，只介绍和拍卖相关的函数。
+荷兰拍卖合约中共有 9 个函数，与 ERC721 相关的函数我们这里不再重复介绍，只介绍和拍卖相关的函数。
 
 - 设定拍卖起始时间：我们在构造函数中会声明当前区块时间为起始时间，项目方也可以通过`setAuctionStartTime()`函数来调整：
 
@@ -990,9 +990,9 @@ function getAuctionPrice()
 }
 ```
 
-- 用户拍卖并铸造NFT：用户通过调用`auctionMint()`函数，支付ETH参加荷兰拍卖并铸造NFT。
+- 用户拍卖并铸造 NFT：用户通过调用`auctionMint()`函数，支付 ETH 参加荷兰拍卖并铸造 NFT。
 
-该函数首先检查拍卖是否开始/铸造是否超出NFT总量。接着，合约通过`getAuctionPrice()`和铸造数量计算拍卖成本，并检查用户支付的ETH是否足够：如果足够，则将NFT铸造给用户，并退回超额的ETH；反之，则回退交易。
+该函数首先检查拍卖是否开始/铸造是否超出 NFT 总量。接着，合约通过`getAuctionPrice()`和铸造数量计算拍卖成本，并检查用户支付的 ETH 是否足够：如果足够，则将 NFT 铸造给用户，并退回超额的 ETH；反之，则回退交易。
 
 ```js
 // 拍卖mint函数
@@ -1023,7 +1023,7 @@ function auctionMint(uint256 quantity) external payable{
 }
 ```
 
-- 项目方取出筹集的ETH：项目方可以通过`withdrawMoney()`函数提走拍卖筹集的ETH。
+- 项目方取出筹集的 ETH：项目方可以通过`withdrawMoney()`函数提走拍卖筹集的 ETH。
 
 ```js
 // 提款函数，onlyOwner
@@ -1035,19 +1035,19 @@ function withdrawMoney() external onlyOwner {
 
 ## 6. 默克尔树 Merkle Tree
 
-`Merkle Tree`，也叫默克尔树或哈希树，是区块链的底层加密技术，被比特币和以太坊区块链广泛采用。`Merkle Tree`是一种自下而上构建的加密树，每个叶子是对应数据的哈希，而每个非叶子为它的2个子节点的哈希。
+`Merkle Tree`，也叫默克尔树或哈希树，是区块链的底层加密技术，被比特币和以太坊区块链广泛采用。`Merkle Tree`是一种自下而上构建的加密树，每个叶子是对应数据的哈希，而每个非叶子为它的 2 个子节点的哈希。
 
 ![](../pic/solidity3-6-1.png)
 
-`Merkle Tree`允许对大型数据结构的内容进行有效和安全的验证（`Merkle Proof`）。对于有N个叶子结点的`Merkle Tree`，在已知`root`根值的情况下，验证某个数据是否有效（属于`Merkle Tree`叶子结点）只需要`ceil(log₂N)`个数据（也叫`proof`），非常高效。如果数据有误，或者给的`proof`错误，则无法还原出`root`根植。 下面的例子中，叶子L1的`Merkle proof`为`Hash 0-1`和`Hash 1`：知道这两个值，就能验证L1的值是不是在`Merkle Tree`的叶子中。为什么呢？ 因为通过叶子L1我们就可以算出`Hash 0-0`，我们又知道了`Hash 0-1`，那么`Hash 0-0`和`Hash 0-1`就可以联合算出`Hash 0`，然后我们又知道`Hash 1`，`Hash 0`和`Hash 1`就可以联合算出`Top Hash`，也就是`root`节点的`hash`。
+`Merkle Tree`允许对大型数据结构的内容进行有效和安全的验证（`Merkle Proof`）。对于有 N 个叶子结点的`Merkle Tree`，在已知`root`根值的情况下，验证某个数据是否有效（属于`Merkle Tree`叶子结点）只需要`ceil(log₂N)`个数据（也叫`proof`），非常高效。如果数据有误，或者给的`proof`错误，则无法还原出`root`根植。 下面的例子中，叶子 L1 的`Merkle proof`为`Hash 0-1`和`Hash 1`：知道这两个值，就能验证 L1 的值是不是在`Merkle Tree`的叶子中。为什么呢？ 因为通过叶子 L1 我们就可以算出`Hash 0-0`，我们又知道了`Hash 0-1`，那么`Hash 0-0`和`Hash 0-1`就可以联合算出`Hash 0`，然后我们又知道`Hash 1`，`Hash 0`和`Hash 1`就可以联合算出`Top Hash`，也就是`root`节点的`hash`。
 
 ![](../pic/solidity-3-6-2.png)
 
 ### 生成`Merkle Tree`
 
-我们可以利用[网页](https://lab.miguelmota.com/merkletreejs/example/)或者Javascript库[merkletreejs](https://github.com/miguelmota/merkletreejs)来生成Merkle Tree。
+我们可以利用[网页](https://lab.miguelmota.com/merkletreejs/example/)或者 Javascript 库[merkletreejs](https://github.com/miguelmota/merkletreejs)来生成 Merkle Tree。
 
-这里我们用网页来生成4个地址作为叶子结点的`Merkle Tree`。叶子结点输入：
+这里我们用网页来生成 4 个地址作为叶子结点的`Merkle Tree`。叶子结点输入：
 
 ```js
 [
@@ -1072,7 +1072,7 @@ function withdrawMoney() external onlyOwner {
 
 ### `Merkle Proof`验证
 
-通过网站，我们可以得到地址0的`proof`如下，即图2中蓝色结点的哈希值：
+通过网站，我们可以得到地址 0 的`proof`如下，即图 2 中蓝色结点的哈希值：
 
 ```js
 [
@@ -1122,13 +1122,13 @@ library MerkleProof {
 2. `processProof()`函数：利用`proof`和`leaf`依次计算出`Merkle Tree`的`root`。它调用了`_hashPair()`函数。
 3. `_hashPair()`函数：用`keccak256()`函数计算非根节点对应的两个子节点的哈希（排序后）。
 
-我们将地址0的`Hash`，`root`和对应的`proof`输入到`verify()`函数，将返回`true`。因为地址0的`Hash`在根为`root`的`Merkle Tree`中，且`proof`正确。如果改变了其中任意一个值，都将返回`false`。
+我们将地址 0 的`Hash`，`root`和对应的`proof`输入到`verify()`函数，将返回`true`。因为地址 0 的`Hash`在根为`root`的`Merkle Tree`中，且`proof`正确。如果改变了其中任意一个值，都将返回`false`。
 
-### 利用`Merkle Tree`发放NFT白名单
+### 利用`Merkle Tree`发放 NFT 白名单
 
-一份拥有800个地址的白名单，更新一次所需的gas fee很容易超过1个ETH。而由于`Merkle Tree`验证时，`leaf`和`proof`可以存在后端，链上仅需存储一个`root`的值，非常节省`gas`，项目方经常用它来发放白名单。很多`ERC721`标准的NFT和`ERC20`标准代币的白名单/空投都是利用`Merkle Tree`发出的，比如`optimism`的空投。
+一份拥有 800 个地址的白名单，更新一次所需的 gas fee 很容易超过 1 个 ETH。而由于`Merkle Tree`验证时，`leaf`和`proof`可以存在后端，链上仅需存储一个`root`的值，非常节省`gas`，项目方经常用它来发放白名单。很多`ERC721`标准的 NFT 和`ERC20`标准代币的白名单/空投都是利用`Merkle Tree`发出的，比如`optimism`的空投。
 
-这里，我们介绍如何利用`MerkleTree`合约来发放NFT白名单：
+这里，我们介绍如何利用`MerkleTree`合约来发放 NFT 白名单：
 
 ```js
 contract MerkleTree is ERC721 {
@@ -1179,20 +1179,20 @@ contract MerkleTree is ERC721 {
 
 #### 函数
 
-合约中共有4个函数：
+合约中共有 4 个函数：
 
-- 构造函数：初始化NFT的名称和代号，还有`Merkle Tree`的`root`。
-- `mint()`函数：利用白名单铸造NFT。参数为白名单地址`account`，铸造的`tokenId`和`proof`。首先验证`address`是否在白名单中，验证通过则把序号为`tokenId`的NFT铸造给该地址，并将它记录到`mintedAddress`。此过程中调用了`_leaf()`和`_verify()`函数。
+- 构造函数：初始化 NFT 的名称和代号，还有`Merkle Tree`的`root`。
+- `mint()`函数：利用白名单铸造 NFT。参数为白名单地址`account`，铸造的`tokenId`和`proof`。首先验证`address`是否在白名单中，验证通过则把序号为`tokenId`的 NFT 铸造给该地址，并将它记录到`mintedAddress`。此过程中调用了`_leaf()`和`_verify()`函数。
 - `_leaf()`函数：计算了`Merkle Tree`的叶子地址的哈希。
 - `_verify()`函数：调用了`MerkleProof`库的`verify()`函数，进行`Merkle Tree`验证。
 
 ## 7. 数字签名 Signature
 
-简单介绍以太坊中的数字签名ECDSA，以及如何利用它发放NFT白名单。代码中的ECDSA库由OpenZeppelin的同名库简化而成。
+简单介绍以太坊中的数字签名 ECDSA，以及如何利用它发放 NFT 白名单。代码中的 ECDSA 库由 OpenZeppelin 的同名库简化而成。
 
 ### 数字签名
 
-如果你用过`opensea`交易NFT，对签名就不会陌生。下图是小狐狸（`metamask`）钱包进行签名时弹出的窗口，它可以证明你拥有私钥的同时不需要对外公布私钥。
+如果你用过`opensea`交易 NFT，对签名就不会陌生。下图是小狐狸（`metamask`）钱包进行签名时弹出的窗口，它可以证明你拥有私钥的同时不需要对外公布私钥。
 
 ![](../pic/solidity-3-7-1.png)
 
@@ -1204,12 +1204,12 @@ contract MerkleTree is ERC721 {
 
 ### `ECDSA`合约
 
-ECDSA标准中包含两个部分：
+ECDSA 标准中包含两个部分：
 
 1. 签名者利用`私钥`（隐私的）对消息（公开的）创建`签名`（公开的）。
 2. 其他人使用`消息`（公开的）和`签名`（公开的）恢复签名者的`公钥`（公开的）并验证`签名`。
 
-我们将配合ECDSA库讲解这两个部分。本教程所用的`私钥`，`公钥`，`消息`，`以太坊签名`消息，签名如下所示：
+我们将配合 ECDSA 库讲解这两个部分。本教程所用的`私钥`，`公钥`，`消息`，`以太坊签名`消息，签名如下所示：
 
 ```js
 私钥: 0x227dbb8586117d55284e26620bc76534dfbd2394be34cf4a09cb775d593b6f2b;
@@ -1257,9 +1257,9 @@ function toEthSignedMessageHash(bytes32 hash) public pure returns (bytes32) {
 以太坊签名消息: 0xb42ca4636f721c7a331923e764587e98ec577cea1a185f60dfcc14dbb9bd900b;
 ```
 
-3-1. **利用钱包签名**：日常操作中，大部分用户都是通过这种方式进行签名。在获取到需要签名的消息之后，我们需要使用`metamask`钱包进行签名。`metamask`的`personal_sign`方法会自动把`消息`转换为`以太坊签名消息`，然后发起签名。所以我们只需要输入`消息`和`签名者钱包account`即可。需要注意的是输入的`签名者钱包account`需要和`metamask`当前连接的account一致才能使用。
+3-1. **利用钱包签名**：日常操作中，大部分用户都是通过这种方式进行签名。在获取到需要签名的消息之后，我们需要使用`metamask`钱包进行签名。`metamask`的`personal_sign`方法会自动把`消息`转换为`以太坊签名消息`，然后发起签名。所以我们只需要输入`消息`和`签名者钱包account`即可。需要注意的是输入的`签名者钱包account`需要和`metamask`当前连接的 account 一致才能使用。
 
-因此首先把例子中的`私钥`导入到小狐狸钱包，然后打开浏览器的`console`页面：`Chrome菜单-更多工具-开发者工具-Console`。在连接钱包的状态下（如连接opensea，否则会出现错误），依次输入以下指令进行签名：
+因此首先把例子中的`私钥`导入到小狐狸钱包，然后打开浏览器的`console`页面：`Chrome菜单-更多工具-开发者工具-Console`。在连接钱包的状态下（如连接 opensea，否则会出现错误），依次输入以下指令进行签名：
 
 ```js
 ethereum.enable();
@@ -1274,7 +1274,7 @@ ethereum.request({ method: "personal_sign", params: [account, hash] });
 0x390d704d7ab732ce034203599ee93dd5d3cb0d4d1d7c600ac11726659489773d559b12d220f99f41d17651b0c1c6a669d346a397f8541760d6b32a5725378b241c;
 ```
 
-3-2. **利用web3.py签名**： 批量调用中更倾向于使用代码进行签名，以下是基于web3.py的实现。
+3-2. **利用 web3.py 签名**： 批量调用中更倾向于使用代码进行签名，以下是基于 web3.py 的实现。
 
 ```py
 from web3 import Web3, HTTPProvider
@@ -1367,9 +1367,9 @@ _signer：0xe16C1623c1AA7D919cd2241d8b36d9E79C1Be2A2
 
 ### 利用签名发放白名单
 
-NFT项目方可以利用`ECDSA`的这个特性发放白名单。由于签名是链下的，不需要`gas`，因此这种白名单发放模式比`Merkle Tree`模式还要经济。方法非常简单，项目方利用项目方账户把白名单发放地址签名（可以加上地址可以铸造的`tokenId`）。然后`mint`的时候利用`ECDSA`检验签名是否有效，如果有效，则给他`mint`。
+NFT 项目方可以利用`ECDSA`的这个特性发放白名单。由于签名是链下的，不需要`gas`，因此这种白名单发放模式比`Merkle Tree`模式还要经济。方法非常简单，项目方利用项目方账户把白名单发放地址签名（可以加上地址可以铸造的`tokenId`）。然后`mint`的时候利用`ECDSA`检验签名是否有效，如果有效，则给他`mint`。
 
-`SignatureNFT`合约实现了利用签名发放NFT白名单。
+`SignatureNFT`合约实现了利用签名发放 NFT 白名单。
 
 #### 状态变量
 
@@ -1380,11 +1380,11 @@ NFT项目方可以利用`ECDSA`的这个特性发放白名单。由于签名是�
 
 #### 函数
 
-合约中共有4个函数：
+合约中共有 4 个函数：
 
-- 构造函数初始化NFT的名称和代号，还有`ECDSA`的签名地址`signer`。
-- `mint()`函数接受地址`address`，`tokenId`和`_signature`三个参数，验证签名是否有效：如果有效，则把`tokenId`的NFT铸造给`address`地址，并将它记录到`mintedAddress`。它调用了`getMessageHash()`，`ECDSA.toEthSignedMessageHash()`和`verify()`函数。
-- `getMessageHash()`函数将mint地址（`address`类型）和`tokenId`（`uint256`类型）拼成消息。
+- 构造函数初始化 NFT 的名称和代号，还有`ECDSA`的签名地址`signer`。
+- `mint()`函数接受地址`address`，`tokenId`和`_signature`三个参数，验证签名是否有效：如果有效，则把`tokenId`的 NFT 铸造给`address`地址，并将它记录到`mintedAddress`。它调用了`getMessageHash()`，`ECDSA.toEthSignedMessageHash()`和`verify()`函数。
+- `getMessageHash()`函数将 mint 地址（`address`类型）和`tokenId`（`uint256`类型）拼成消息。
 - `verify()`函数调用了`ECDSA`库的`verify()`函数，来进行`ECDSA`签名验证。
 
 ```js
@@ -1430,21 +1430,21 @@ contract SignatureNFT is ERC721 {
 }
 ```
 
-## 8. NFT交易所
+## 8. NFT 交易所
 
-Opensea是以太坊上最大的NFT交易平台，总交易总量达到了$300亿。Opensea在交易中抽成2.5%，因此它通过用户交易至少获利了$7.5亿。另外，它的运作并不去中心化，且不准备发币补偿用户。NFT玩家苦Opensea久已，今天我们就利用智能合约搭建一个零手续费的去中心化NFT交易所：`NFTSwap`。
+Opensea 是以太坊上最大的 NFT 交易平台，总交易总量达到了$300 亿。Opensea 在交易中抽成 2.5%，因此它通过用户交易至少获利了$7.5 亿。另外，它的运作并不去中心化，且不准备发币补偿用户。NFT 玩家苦 Opensea 久已，今天我们就利用智能合约搭建一个零手续费的去中心化 NFT 交易所：`NFTSwap`。
 
 ### 设计逻辑
 
-- 卖家：出售NFT的一方，可以挂单`list`、撤单`revoke`、修改价格`update`。
-- 买家：购买NFT的一方，可以购买`purchase`。
-- 订单：卖家发布的NFT链上订单，一个系列的同一`tokenId`最多存在一个订单，其中包含挂单价格`price`和持有人`owner`信息。当一个订单交易完成或被撤单后，其中信息清零。
+- 卖家：出售 NFT 的一方，可以挂单`list`、撤单`revoke`、修改价格`update`。
+- 买家：购买 NFT 的一方，可以购买`purchase`。
+- 订单：卖家发布的 NFT 链上订单，一个系列的同一`tokenId`最多存在一个订单，其中包含挂单价格`price`和持有人`owner`信息。当一个订单交易完成或被撤单后，其中信息清零。
 
 ### `NFTSwap`合约
 
 #### 事件
 
-合约包含4个事件，对应挂单`list`、撤单`revoke`、修改价格`update`、购买`purchase`这四个行为：
+合约包含 4 个事件，对应挂单`list`、撤单`revoke`、修改价格`update`、购买`purchase`这四个行为：
 
 ```js
 event List(address indexed seller, address indexed nftAddr, uint256 indexed tokenId, uint256 price);
@@ -1455,7 +1455,7 @@ event Update(address indexed seller, address indexed nftAddr, uint256 indexed to
 
 #### 订单
 
-NFT订单抽象为`Order`结构体，包含挂单价格`price`和持有人`owner`信息。`nftList`映射记录了订单是对应的NFT系列（合约地址）和`tokenId`信息。
+NFT 订单抽象为`Order`结构体，包含挂单价格`price`和持有人`owner`信息。`nftList`映射记录了订单是对应的 NFT 系列（合约地址）和`tokenId`信息。
 
 ```js
 // 定义order结构体
@@ -1469,7 +1469,7 @@ mapping(address => mapping(uint256 => Order)) public nftList;
 
 #### 回退函数
 
-在NFTSwap中，用户使用ETH购买NFT。因此，合约需要实现`fallback()`函数来接收ETH。
+在 NFTSwap 中，用户使用 ETH 购买 NFT。因此，合约需要实现`fallback()`函数来接收 ETH。
 
 ```js
 fallback() external payable{}
@@ -1477,7 +1477,7 @@ fallback() external payable{}
 
 #### onERC721Received
 
-`ERC721`的安全转账函数会检查接收合约是否实现了`onERC721Received()`函数，并返回正确的选择器`selector`。用户下单之后，需要将NFT发送给`NFTSwap`合约。因此`NFTSwap`继承`IERC721Receiver`接口，并实现`onERC721Received()`函数：
+`ERC721`的安全转账函数会检查接收合约是否实现了`onERC721Received()`函数，并返回正确的选择器`selector`。用户下单之后，需要将 NFT 发送给`NFTSwap`合约。因此`NFTSwap`继承`IERC721Receiver`接口，并实现`onERC721Received()`函数：
 
 ```js
 contract NFTSwap is IERC721Receiver{
@@ -1495,9 +1495,9 @@ contract NFTSwap is IERC721Receiver{
 
 #### 交易
 
-合约实现了4个交易相关的函数：
+合约实现了 4 个交易相关的函数：
 
-- 挂单`list()`：卖家创建NFT并创建订单，并释放`List`事件。参数为NFT合约地址`_nftAddr`，NFT对应的`_tokenId`，挂单价格`_price`（注意：单位是`wei`）。成功后，NFT会从卖家转到`NFTSwap`合约中。
+- 挂单`list()`：卖家创建 NFT 并创建订单，并释放`List`事件。参数为 NFT 合约地址`_nftAddr`，NFT 对应的`_tokenId`，挂单价格`_price`（注意：单位是`wei`）。成功后，NFT 会从卖家转到`NFTSwap`合约中。
 
 ```js
 // 挂单: 卖家上架NFT，合约地址为_nftAddr，tokenId为_tokenId，价格_price为以太坊（单位是wei）
@@ -1517,7 +1517,7 @@ function list(address _nftAddr, uint256 _tokenId, uint256 _price) public{
 }
 ```
 
-- 撤单`revoke()`：卖家撤回挂单，并释放`Revoke`事件。参数为NFT合约地址`_nftAddr`，NFT对应的`_tokenId`。成功后，NFT会从`NFTSwap`合约转回卖家。
+- 撤单`revoke()`：卖家撤回挂单，并释放`Revoke`事件。参数为 NFT 合约地址`_nftAddr`，NFT 对应的`_tokenId`。成功后，NFT 会从`NFTSwap`合约转回卖家。
 
 ```js
 // 撤单： 卖家取消挂单
@@ -1537,7 +1537,7 @@ function revoke(address _nftAddr, uint256 _tokenId) public {
 }
 ```
 
-- 修改价格`update()`：卖家修改NFT订单价格，并释放`Update`事件。参数为NFT合约地址`_nftAddr`，NFT对应的`_tokenId`，更新后的挂单价格`_newPrice`（注意：单位是`wei`）。
+- 修改价格`update()`：卖家修改 NFT 订单价格，并释放`Update`事件。参数为 NFT 合约地址`_nftAddr`，NFT 对应的`_tokenId`，更新后的挂单价格`_newPrice`（注意：单位是`wei`）。
 
 ```js
 // 调整价格: 卖家调整挂单价格
@@ -1557,7 +1557,7 @@ function update(address _nftAddr, uint256 _tokenId, uint256 _newPrice) public {
 }
 ```
 
-- 购买`purchase`：买家支付ETH购买挂单的NFT，并释放`Purchase`事件。参数为NFT合约地址`_nftAddr`，NFT对应的`_tokenId`。成功后，ETH将转给卖家，NFT将从`NFTSwap`合约转给买家。
+- 购买`purchase`：买家支付 ETH 购买挂单的 NFT，并释放`Purchase`事件。参数为 NFT 合约地址`_nftAddr`，NFT 对应的`_tokenId`。成功后，ETH 将转给卖家，NFT 将从`NFTSwap`合约转给买家。
 
 ```js
 // 购买: 买家购买NFT，合约为_nftAddr，tokenId为_tokenId，调用函数时要附带ETH
@@ -1584,7 +1584,7 @@ function purchase(address _nftAddr, uint256 _tokenId) payable public {
 
 ## 9. 链上随机数
 
-很多以太坊上的应用都需要用到随机数，例如NFT随机抽取`tokenId`、抽盲盒、`gamefi`战斗中随机分胜负等等。但是由于以太坊上所有数据都是公开透明（`public`）且确定性（`deterministic`）的，它没法像其他编程语言一样给开发者提供生成随机数的方法。这一讲我们将介绍链上（哈希函数）和链下（`chainlink`预言机）随机数生成的两种方法，并利用它们做一款`tokenId`随机铸造的NFT。
+很多以太坊上的应用都需要用到随机数，例如 NFT 随机抽取`tokenId`、抽盲盒、`gamefi`战斗中随机分胜负等等。但是由于以太坊上所有数据都是公开透明（`public`）且确定性（`deterministic`）的，它没法像其他编程语言一样给开发者提供生成随机数的方法。这一讲我们将介绍链上（哈希函数）和链下（`chainlink`预言机）随机数生成的两种方法，并利用它们做一款`tokenId`随机铸造的 NFT。
 
 ### 链上随机数生成
 
@@ -1609,11 +1609,11 @@ function getRandomOnchain() public view returns(uint256){
 - 首先，`block.timestamp`，`msg.sender`和`blockhash(block.number-1)`这些变量都是公开的，使用者可以预测出用这些种子生成出的随机数，并挑出他们想要的随机数执行合约。
 - 其次，矿工可以操纵`blockhash`和`block.timestamp`，使得生成的随机数符合他的利益。
 
-尽管如此，由于这种方法是最便捷的链上随机数生成方法，大量项目方依靠它来生成不安全的随机数，包括知名的项目`meebits`，`loots`等。当然，这些项目也无一例外的被[攻击](https://forum.openzeppelin.com/t/understanding-the-meebits-exploit/8281)了：攻击者可以铸造任何他们想要的稀有NFT，而非随机抽取。
+尽管如此，由于这种方法是最便捷的链上随机数生成方法，大量项目方依靠它来生成不安全的随机数，包括知名的项目`meebits`，`loots`等。当然，这些项目也无一例外的被[攻击](https://forum.openzeppelin.com/t/understanding-the-meebits-exploit/8281)了：攻击者可以铸造任何他们想要的稀有 NFT，而非随机抽取。
 
 ### 链下随机数生成
 
-我们可以在链下生成随机数，然后通过预言机把随机数上传到链上。`Chainlink`提供`VRF`（可验证随机函数）服务，链上开发者可以支付`LINK`代币来获取随机数。 `Chainlink VRF`有两个版本，第二个版本需要官网注册并预付费，比第一个版本多许多操作，需要花费更多的gas，但取消订阅后可以拿回剩余的Link，这里介绍第二个版本`Chainlink VRF V2`。
+我们可以在链下生成随机数，然后通过预言机把随机数上传到链上。`Chainlink`提供`VRF`（可验证随机函数）服务，链上开发者可以支付`LINK`代币来获取随机数。 `Chainlink VRF`有两个版本，第二个版本需要官网注册并预付费，比第一个版本多许多操作，需要花费更多的 gas，但取消订阅后可以拿回剩余的 Link，这里介绍第二个版本`Chainlink VRF V2`。
 
 #### `Chainlink VRF`使用步骤
 
@@ -1621,11 +1621,11 @@ function getRandomOnchain() public view returns(uint256){
 
 我们将用一个简单的合约介绍使用`Chainlink VRF`的步骤。`RandomNumberConsumer`合约可以向`VRF`请求随机数，并存储在状态变量`randomWords`中。
 
-1. 申请Subscription并转入`Link`代币
+1. 申请 Subscription 并转入`Link`代币
 
-在Chainlink VRF网站[这里](https://vrf.chain.link/)上创建一个`Subscription`，其中邮箱和项目名都是选填
+在 Chainlink VRF 网站[这里](https://vrf.chain.link/)上创建一个`Subscription`，其中邮箱和项目名都是选填
 
-创建完成后往`Subscription`中转入一些`Link`代币。测试网的`LINK`代币可以从[LINK水龙头](https://faucets.chain.link/)领取。
+创建完成后往`Subscription`中转入一些`Link`代币。测试网的`LINK`代币可以从[LINK 水龙头](https://faucets.chain.link/)领取。
 
 2. 用户合约继承`VRFConsumerBaseV2`
 
@@ -1703,7 +1703,7 @@ function requestRandomWords() external {
 5. `VRF`合约验证签名有效性
 6. 用户合约接收并使用随机数
 
-在VRF合约验证签名有效之后，会自动调用用户合约的回退函数`fulfillRandomness()`，将链下生成的随机数发送过来。用户要把消耗随机数的逻辑写在这里。
+在 VRF 合约验证签名有效之后，会自动调用用户合约的回退函数`fulfillRandomness()`，将链下生成的随机数发送过来。用户要把消耗随机数的逻辑写在这里。
 
 注意: 用户申请随机数时调用的`requestRandomness()`和`VRF`合约返回随机数时调用的回退函数`fulfillRandomness()`是两笔交易，调用者分别是用户合约和`VRF`合约，后者比前者晚几分钟（不同链延迟不一样）。
 
@@ -1719,7 +1719,7 @@ function fulfillRandomWords(uint256 requestId, uint256[] memory s_randomWords) i
 
 ### `tokenId`随机铸造的`NFT`
 
-这一节，我们将利用链上和链下随机数来做一款`tokenId`随机铸造的NFT。`Random`合约继承`ERC721`和`VRFConsumerBaseV2`合约。
+这一节，我们将利用链上和链下随机数来做一款`tokenId`随机铸造的 NFT。`Random`合约继承`ERC721`和`VRFConsumerBaseV2`合约。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -1734,8 +1734,8 @@ contract Random is ERC721, VRFConsumerBaseV2{
 
 #### 状态变量
 
-- NFT相关
-  - `totalSupply`：NFT总供给。
+- NFT 相关
+  - `totalSupply`：NFT 总供给。
   - `ids`：数组，用于计算可供`mint`的`tokenId`，见`pickRandomUniqueId()`函数。
   - `mintCount`：已经`mint`的数量。
 - `Chainlink VRF`相关
@@ -1785,7 +1785,7 @@ contract Random is ERC721, VRFConsumerBaseV2{
 
 #### 构造函数
 
-初始化继承的VRFConsumerBaseV2和ERC721合约的相关变量。
+初始化继承的 VRFConsumerBaseV2 和 ERC721 合约的相关变量。
 
 ```js
 constructor(uint64 s_subId)
@@ -1798,13 +1798,13 @@ constructor(uint64 s_subId)
 
 #### 其他函数
 
-除了构造函数以外，合约里还定义了5个函数。
+除了构造函数以外，合约里还定义了 5 个函数。
 
 - `pickRandomUniqueId()`：输入随机数，获取可供`mint`的`tokenId`。
 - `getRandomOnchain()`：获取链上随机数（不安全）。
-- `mintRandomOnchain()`：利用链上随机数铸造NFT，调用了`getRandomOnchain()`和`pickRandomUniqueId()`。
-- `mintRandomVRF()`：申请`Chainlink VRF`用于铸造随机数。由于使用随机数铸造的逻辑在回调函数`fulfillRandomness()`，而回调函数的调用者是`VRF`合约，而非铸造NFT的用户，这里必须利用`requestToSender`状态变量记录`VRF`申请标识符对应的用户地址。
-- `fulfillRandomWords()`：`VRF`的回调函数，由`VRF`合约在验证随机数真实性后自动调用，用返回的链下随机数铸造NFT。
+- `mintRandomOnchain()`：利用链上随机数铸造 NFT，调用了`getRandomOnchain()`和`pickRandomUniqueId()`。
+- `mintRandomVRF()`：申请`Chainlink VRF`用于铸造随机数。由于使用随机数铸造的逻辑在回调函数`fulfillRandomness()`，而回调函数的调用者是`VRF`合约，而非铸造 NFT 的用户，这里必须利用`requestToSender`状态变量记录`VRF`申请标识符对应的用户地址。
+- `fulfillRandomWords()`：`VRF`的回调函数，由`VRF`合约在验证随机数真实性后自动调用，用返回的链下随机数铸造 NFT。
 
 ```js
 /**
@@ -1875,11 +1875,11 @@ function fulfillRandomWords(uint256 requestId, uint256[] memory s_randomWords) i
 
 ## 10. ERC1155
 
-`ERC1155`标准，它支持一个合约包含多种代币。我们会发行一个魔改的无聊猿 - `BAYC1155`：它包含10,000种代币，且元数据与`BAYC`一致。
+`ERC1155`标准，它支持一个合约包含多种代币。我们会发行一个魔改的无聊猿 - `BAYC1155`：它包含 10,000 种代币，且元数据与`BAYC`一致。
 
 ### `EIP1155`
 
-不论是`ERC20`还是`ERC721`标准，每个合约都对应一个独立的代币。假设我们要在以太坊上打造一个类似《魔兽世界》的大型游戏，这需要我们对每个装备都部署一个合约。上千种装备就要部署和管理上千个合约，这非常麻烦。因此，以太坊[EIP1155](https://eips.ethereum.org/EIPS/eip-1155)提出了一个多代币标准`ERC1155`，允许一个合约包含多个同质化和非同质化代币。`ERC1155`在GameFi应用最多，Decentraland、Sandbox等知名链游都使用它。
+不论是`ERC20`还是`ERC721`标准，每个合约都对应一个独立的代币。假设我们要在以太坊上打造一个类似《魔兽世界》的大型游戏，这需要我们对每个装备都部署一个合约。上千种装备就要部署和管理上千个合约，这非常麻烦。因此，以太坊[EIP1155](https://eips.ethereum.org/EIPS/eip-1155)提出了一个多代币标准`ERC1155`，允许一个合约包含多个同质化和非同质化代币。`ERC1155`在 GameFi 应用最多，Decentraland、Sandbox 等知名链游都使用它。
 
 简单来说，`ERC1155`与之前介绍的非同质化代币标准`ERC721`类似：在`ERC721`中，每个代币都有一个`tokenId`作为唯一标识，每个`tokenId`只对应一个代币；而在`ERC1155`中，每一种代币都有一个`id`作为唯一标识，每个`id`对应一种代币。这样，代币种类就可以非同质的在同一个合约里管理了，并且每种代币都有一个网址`uri`来存储它的元数据，类似`ERC721`的`tokenURI`。下面是`ERC1155`的元数据接口合约`IERC1155MetadataURI`：
 
@@ -1894,11 +1894,11 @@ interface IERC1155MetadataURI is IERC1155 {
     function uri(uint256 id) external view returns (string memory);
 ```
 
-那么怎么区分`ERC1155`中的某类代币是同质化还是非同质化代币呢？其实很简单：如果某个`id`对应的代币总量为1，那么它就是非同质化代币，类似`ERC721`；如果某个`id`对应的代币总量大于1，那么他就是同质化代币，因为这些代币都分享同一个`id`，类似`ERC20`。
+那么怎么区分`ERC1155`中的某类代币是同质化还是非同质化代币呢？其实很简单：如果某个`id`对应的代币总量为 1，那么它就是非同质化代币，类似`ERC721`；如果某个`id`对应的代币总量大于 1，那么他就是同质化代币，因为这些代币都分享同一个`id`，类似`ERC20`。
 
 ### `IERC1155`接口合约
 
-`IERC1155`接口合约抽象了`EIP1155`需要实现的功能，其中包含4个事件和6个函数。与`ERC721`不同，因为`ERC1155`包含多类代币，它实现了批量转账和批量余额查询，一次操作多种代币。
+`IERC1155`接口合约抽象了`EIP1155`需要实现的功能，其中包含 4 个事件和 6 个函数。与`ERC721`不同，因为`ERC1155`包含多类代币，它实现了批量转账和批量余额查询，一次操作多种代币。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -2063,7 +2063,7 @@ interface IERC1155Receiver is IERC165 {
 
 #### `ERC1155`变量
 
-`ERC1155`主合约包含4个状态变量：
+`ERC1155`主合约包含 4 个状态变量：
 
 - `name`：代币名称
 - `symbol`：代币代号
@@ -2455,15 +2455,15 @@ contract BAYC1155 is ERC1155{
 
 ## 11. WETH
 
-### 什么是WETH？
+### 什么是 WETH？
 
 `WETH` (Wrapped ETH)是`ETH`的带包装版本。我们常见的`WETH`，`WBTC`，`WBNB`，都是带包装的原生代币。那么我们为什么要包装它们？
 
-在2015年，ERC20标准出现，该代币标准旨在为以太坊上的代币制定一套标准化的规则，从而简化了新代币的发布，并使区块链上的所有代币相互可比。不幸的是，以太币本身并不符合`ERC20`标准。`WETH`的开发是为了提高区块链之间的互操作性 ，并使`ETH`可用于去中心化应用程序（dApps）。它就像是给原生代币穿了一件智能合约做的衣服：穿上衣服的时候，就变成了`WETH`，符合`ERC20`同质化代币标准，可以跨链，可以用于dApp；脱下衣服，它可1:1兑换ETH。
+在 2015 年，ERC20 标准出现，该代币标准旨在为以太坊上的代币制定一套标准化的规则，从而简化了新代币的发布，并使区块链上的所有代币相互可比。不幸的是，以太币本身并不符合`ERC20`标准。`WETH`的开发是为了提高区块链之间的互操作性 ，并使`ETH`可用于去中心化应用程序（dApps）。它就像是给原生代币穿了一件智能合约做的衣服：穿上衣服的时候，就变成了`WETH`，符合`ERC20`同质化代币标准，可以跨链，可以用于 dApp；脱下衣服，它可 1:1 兑换 ETH。
 
 ### `WETH`合约
 
-目前在用的[主网WETH合约](https://rinkeby.etherscan.io/token/0xc778417e063141139fce010982780140aa0cd5ab?a=0xe16c1623c1aa7d919cd2241d8b36d9e79c1be2a2)写于2015年，非常老，那时候solidity是0.4版本。我们用0.8版本重新写一个`WETH`。
+目前在用的[主网 WETH 合约](https://rinkeby.etherscan.io/token/0xc778417e063141139fce010982780140aa0cd5ab?a=0xe16c1623c1aa7d919cd2241d8b36d9e79c1be2a2)写于 2015 年，非常老，那时候 solidity 是 0.4 版本。我们用 0.8 版本重新写一个`WETH`。
 
 `WETH`符合`ERC20`标准，它比普通的`ERC20`多了两个功能：
 
@@ -2516,14 +2516,14 @@ contract WETH is ERC20{
 
 #### 事件
 
-`WETH`合约共有2个事件：
+`WETH`合约共有 2 个事件：
 
 1. `Deposit`：存款事件，在存款的时候释放。
 2. `Withdraw`：取款事件，在取款的时候释放。
 
 #### 函数
 
-除了`ERC20`标准的函数外，`WETH`合约有4个函数：
+除了`ERC20`标准的函数外，`WETH`合约有 4 个函数：
 
 - 构造函数：初始化`WETH`的名字和代号。
 - 回调函数：`fallback()`和`receive()`，当用户往`WETH`合约转`ETH`的时候，会自动触发`deposit()`存款函数，获得等量的`WETH`。
@@ -2532,7 +2532,7 @@ contract WETH is ERC20{
 
 ## 12. 分账
 
-分账合约，该合约允许将ETH按权重转给一组账户中，进行分账。代码部分由OpenZeppelin库的[PaymentSplitter合约](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/finance/PaymentSplitter.sol)简化而来。
+分账合约，该合约允许将 ETH 按权重转给一组账户中，进行分账。代码部分由 OpenZeppelin 库的[PaymentSplitter 合约](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/finance/PaymentSplitter.sol)简化而来。
 
 分账就是按照一定比例分钱财。在现实中，经常会有“分赃不均”的事情发生；而在区块链的世界里，`Code is Law`，我们可以事先把每个人应分的比例写在智能合约中，获得收入后，再由智能合约来进行分账。
 
@@ -2558,7 +2558,7 @@ contract PaymentSplit{
 
 #### 事件
 
-分账合约中共有3个事件：
+分账合约中共有 3 个事件：
 
 - `PayeeAdded`：增加受益人事件。
 - `PaymentReleased`：受益人提款事件。
@@ -2573,7 +2573,7 @@ event PaymentReceived(address from, uint256 amount); // 合约收款事件
 
 #### 状态变量
 
-分账合约中共有5个状态变量，用来记录受益地址、份额、支付出去的`ETH`等变量：
+分账合约中共有 5 个状态变量，用来记录受益地址、份额、支付出去的`ETH`等变量：
 
 - `totalShares`：总份额，为`shares`的和。
 - `totalReleased`：从分账合约向受益人支付出去的`ETH`，为`released`的和。
@@ -2592,11 +2592,11 @@ address[] public payees; // 受益人数组
 
 #### 函数
 
-分账合约中共有6个函数：
+分账合约中共有 6 个函数：
 
-- 构造函数：始化受益人数组`_payees`和分账份额数组`_shares`，其中数组长度不能为0，两个数组长度要相等。`_shares`中元素要大于0，`_payees`中地址不能为0地址且不能有重复地址。
+- 构造函数：始化受益人数组`_payees`和分账份额数组`_shares`，其中数组长度不能为 0，两个数组长度要相等。`_shares`中元素要大于 0，`_payees`中地址不能为 0 地址且不能有重复地址。
 - `receive()`：回调函数，在分账合约收到`ETH`时释放`PaymentReceived`事件。
-- `release()`：分账函数，为有效受益人地址`_account`分配相应的`ETH`。任何人都可以触发这个函数，但ETH会转给受益人地址`account`。调用了`releasable()`函数。
+- `release()`：分账函数，为有效受益人地址`_account`分配相应的`ETH`。任何人都可以触发这个函数，但 ETH 会转给受益人地址`account`。调用了`releasable()`函数。
 - `releasable()`：计算一个受益人地址应领取的`ETH`。调用了`pendingPayment()`函数。
 - `pendingPayment()`：根据受益人地址`_account`, 分账合约总收入`_totalReceived`和该地址已领取的钱`_alreadyReleased`，计算该受益人现在应分的`ETH`。
 - `_addPayee()`：新增受益人函数及其份额函数。在合约初始化的时候被调用，之后不能修改。
@@ -2686,17 +2686,17 @@ function _addPayee(address _account, uint256 _accountShares) private {
 
 ## 13. 线性释放
 
-介绍代币归属条款，并写一个线性释放ERC20代币的合约。代码由OpenZeppelin的VestingWallet合约简化而来。
+介绍代币归属条款，并写一个线性释放 ERC20 代币的合约。代码由 OpenZeppelin 的 VestingWallet 合约简化而来。
 
 ### 代币归属条款
 
-在传统金融领域，一些公司会向员工和管理层提供股权。但大量股权同时释放会在短期产生抛售压力，拖累股价。因此，公司通常会引入一个归属期来延迟承诺资产的所有权。同样的，在区块链领域，Web3初创公司会给团队分配代币，同时也会将代币低价出售给风投和私募。如果他们把这些低成本的代币同时提到交易所变现，币价将被砸穿，散户直接成为接盘侠。
+在传统金融领域，一些公司会向员工和管理层提供股权。但大量股权同时释放会在短期产生抛售压力，拖累股价。因此，公司通常会引入一个归属期来延迟承诺资产的所有权。同样的，在区块链领域，Web3 初创公司会给团队分配代币，同时也会将代币低价出售给风投和私募。如果他们把这些低成本的代币同时提到交易所变现，币价将被砸穿，散户直接成为接盘侠。
 
 所以，项目方一般会约定代币归属条款（token vesting），在归属期内逐步释放代币，减缓抛压，并防止团队和资本方过早躺平。
 
 ### 线性释放
 
-线性释放指的是代币在归属期内匀速释放。举个例子，某私募持有365,000枚`ICU`代币，归属期为1年（365天），那么每天会释放1,000枚代币。
+线性释放指的是代币在归属期内匀速释放。举个例子，某私募持有 365,000 枚`ICU`代币，归属期为 1 年（365 天），那么每天会释放 1,000 枚代币。
 
 下面，我们就写一个锁仓并线性释放`ERC20`代币的合约`TokenVesting`。它的逻辑很简单：
 
@@ -2706,7 +2706,7 @@ function _addPayee(address _account, uint256 _accountShares) private {
 
 #### 事件
 
-线性释放合约中共有1个事件。
+线性释放合约中共有 1 个事件。
 
 - `ERC20Released`：提币事件，当受益人提取释放代币时释放。
 
@@ -2718,7 +2718,7 @@ contract TokenVesting {
 
 #### 状态变量
 
-线性释放合约中共有4个状态变量。
+线性释放合约中共有 4 个状态变量。
 
 - `beneficiary`：受益人地址。
 - `start`：归属期起始时间戳。
@@ -2735,7 +2735,7 @@ uint256 public immutable duration; // 归属期
 
 #### 函数
 
-线性释放合约中共有3个函数。
+线性释放合约中共有 3 个函数。
 
 - 构造函数：初始化受益人地址，归属期(秒), 起始时间戳。参数为受益人地址`beneficiaryAddress`和归属期`durationSeconds`。为了方便，起始时间戳用的部署时的区块链时间戳`block.timestamp`。
 - `release()`：提取代币函数，将已释放的代币转账给受益人。调用了`vestedAmount()`函数计算可提取的代币数量，释放`ERC20Released`事件，然后将代币`transfer`给受益人。参数为代币地址`token`。
@@ -2797,11 +2797,11 @@ function vestedAmount(address token, uint256 timestamp) public view returns (uin
 
 ### 什么是`LP`代币？
 
-区块链中，用户在去中心化交易所DEX上交易代币，例如`Uniswap`交易所。DEX和中心化交易所(CEX)不同，去中心化交易所使用自动做市商(`AMM`)机制，需要用户或项目方提供资金池，以使得其他用户能够即时买卖。简单来说，用户/项目方需要质押相应的币对（比如`ETH/DAI`）到资金池中，作为补偿，DEX会给他们铸造相应的流动性提供者`LP`代币凭证，证明他们质押了相应的份额，供他们收取手续费。
+区块链中，用户在去中心化交易所 DEX 上交易代币，例如`Uniswap`交易所。DEX 和中心化交易所(CEX)不同，去中心化交易所使用自动做市商(`AMM`)机制，需要用户或项目方提供资金池，以使得其他用户能够即时买卖。简单来说，用户/项目方需要质押相应的币对（比如`ETH/DAI`）到资金池中，作为补偿，DEX 会给他们铸造相应的流动性提供者`LP`代币凭证，证明他们质押了相应的份额，供他们收取手续费。
 
 ### 为什么要锁定流动性？
 
-如果项目方毫无征兆的撤出流动性池中的`LP`代币，那么投资者手中的代币就无法变现，直接归零了。这种行为也叫`rug-pull`，仅2021年，各种`rug-pull`骗局从投资者那里骗取了价值超过28亿美元的加密货币。
+如果项目方毫无征兆的撤出流动性池中的`LP`代币，那么投资者手中的代币就无法变现，直接归零了。这种行为也叫`rug-pull`，仅 2021 年，各种`rug-pull`骗局从投资者那里骗取了价值超过 28 亿美元的加密货币。
 
 但是如果`LP`代币是锁仓在代币锁合约中，在锁仓期结束以前，项目方无法撤出流动性池，也没办法`rug pull`。因此代币锁可以防止项目方过早跑路（要小心锁仓期满跑路的情况）。
 
@@ -2815,7 +2815,7 @@ function vestedAmount(address token, uint256 timestamp) public view returns (uin
 
 #### 事件
 
-`TokenLocker`合约中共有2个事件。
+`TokenLocker`合约中共有 2 个事件。
 
 - `TokenLockStart`：锁仓开始事件，在合约部署时释放，记录受益人地址，代币地址，锁仓起始时间，和结束时间。
 - `Release`：代币释放事件，在受益人取出代币时释放，记录记录受益人地址，代币地址，释放代币时间，和代币数量。
@@ -2828,7 +2828,7 @@ event Release(address indexed beneficiary, address indexed token, uint256 releas
 
 #### 状态变量
 
-`TokenLocker`合约中共有4个状态变量。
+`TokenLocker`合约中共有 4 个状态变量。
 
 - `token`：锁仓代币地址。
 - `beneficiary`：受益人地址。
@@ -2848,7 +2848,7 @@ uint256 public immutable startTime;
 
 #### 函数
 
-`TokenLocker`合约中共有2个函数。
+`TokenLocker`合约中共有 2 个函数。
 
 - 构造函数：初始化代币合约，受益人地址，以及锁仓时间。
 - `release()`：在锁仓期满后，将代币释放给受益人。需要受益人主动调用`release()`函数提取代币。
@@ -2891,11 +2891,11 @@ function release() public {
 
 ## 15. 时间锁
 
-介绍时间锁和时间锁合约。代码由Compound的[Timelock合约](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol)简化而来。
+介绍时间锁和时间锁合约。代码由 Compound 的[Timelock 合约](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol)简化而来。
 
 时间锁（Timelock）是银行金库和其他高安全性容器中常见的锁定机制。它是一种计时器，旨在防止保险箱或保险库在预设时间之前被打开，即便开锁的人知道正确密码。
 
-在区块链，时间锁被`DeFi`和`DAO`大量采用。它是一段代码，他可以将智能合约的某些功能锁定一段时间。它可以大大改善智能合约的安全性，举个例子，假如一个黑客黑了`Uniswap`的多签，准备提走金库的钱，但金库合约加了2天锁定期的时间锁，那么黑客从创建提钱的交易，到实际把钱提走，需要2天的等待期。在这一段时间，项目方可以找应对办法，投资者可以提前抛售代币减少损失。
+在区块链，时间锁被`DeFi`和`DAO`大量采用。它是一段代码，他可以将智能合约的某些功能锁定一段时间。它可以大大改善智能合约的安全性，举个例子，假如一个黑客黑了`Uniswap`的多签，准备提走金库的钱，但金库合约加了 2 天锁定期的时间锁，那么黑客从创建提钱的交易，到实际把钱提走，需要 2 天的等待期。在这一段时间，项目方可以找应对办法，投资者可以提前抛售代币减少损失。
 
 ### 时间锁合约
 
@@ -2911,7 +2911,7 @@ function release() public {
 
 #### 事件
 
-`Timelock`合约中共有4个事件。
+`Timelock`合约中共有 4 个事件。
 
 - `QueueTransaction`：交易创建并进入时间锁队列的事件。
 - `ExecuteTransaction`：锁定期满后交易执行的事件。
@@ -2932,7 +2932,7 @@ event NewAdmin(address indexed newAdmin);
 
 #### 状态变量
 
-`Timelock`合约中共有4个状态变量。
+`Timelock`合约中共有 4 个状态变量。
 
 - `admin`：管理员地址。
 - `delay`：锁定期。
@@ -2949,7 +2949,7 @@ mapping (bytes32 => bool) public queuedTransactions; // txHash到bool，记录�
 
 #### 修饰器
 
-`Timelock`合约中共有2个`modifier`。
+`Timelock`合约中共有 2 个`modifier`。
 
 - `onlyOwner()`：被修饰的函数只能被管理员执行。
 - `onlyTimelock()`：被修饰的函数只能被时间锁合约执行。
@@ -2970,20 +2970,20 @@ modifier onlyTimelock() {
 
 #### 函数
 
-`Timelock`合约中共有7个函数。
+`Timelock`合约中共有 7 个函数。
 
 - 构造函数：初始化交易锁定时间（秒）和管理员地址。
 - `queueTransaction()`：创建交易并添加到时间锁队列中。参数比较复杂，因为要描述一个完整的交易：
 
   - `target`：目标合约地址
-  - `value`：发送ETH数额
+  - `value`：发送 ETH 数额
   - `signature`：调用的函数签名（function signature）
-  - `data`：交易的call data
+  - `data`：交易的 call data
   - `executeTime`：交易执行的区块链时间戳。
 
     调用这个函数时，要保证交易预计执行时间`executeTime`大于当前区块链时间戳+锁定时间`delay`。交易的唯一标识符为所有参数的哈希值，利用`getTxHash()`函数计算。进入队列的交易会更新在`queuedTransactions`变量中，并释放`QueueTransaction`事件。
 
-- `executeTransaction()`：执行交易。它的参数与`queueTransaction()`相同。要求被执行的交易在时间锁队列中，达到交易的执行时间，且没有过期。执行交易时用到了solidity的低级成员函数`call`。
+- `executeTransaction()`：执行交易。它的参数与`queueTransaction()`相同。要求被执行的交易在时间锁队列中，达到交易的执行时间，且没有过期。执行交易时用到了 solidity 的低级成员函数`call`。
 - `cancelTransaction()`：取消交易。它的参数与`queueTransaction()`相同。它要求被取消的交易在队列中，会更新`queuedTransactions`并释放`CancelTransaction`事件。
 - `changeAdmin()`：修改管理员地址，只能被`Timelock`合约调用。
 - `getBlockTimestamp()`：获取当前区块链时间戳。
@@ -3103,14 +3103,14 @@ function getTxHash(
 
 ## 16. 代理合约
 
-介绍代理合约（Proxy Contract）。教学代码由OpenZeppelin的[Proxy合约](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol)简化而来。
+介绍代理合约（Proxy Contract）。教学代码由 OpenZeppelin 的[Proxy 合约](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol)简化而来。
 
 ### 代理模式
 
-Solidity合约部署在链上之后，代码是不可变的（immutable）。这样既有优点，也有缺点：
+Solidity 合约部署在链上之后，代码是不可变的（immutable）。这样既有优点，也有缺点：
 
 - 优点：安全，用户知道会发生什么（大部分时候）。
-- 坏处：就算合约中存在bug，也不能修改或升级，只能部署新合约。但是新合约的地址与旧的不一样，且合约的数据也需要花费大量gas进行迁移。
+- 坏处：就算合约中存在 bug，也不能修改或升级，只能部署新合约。但是新合约的地址与旧的不一样，且合约的数据也需要花费大量 gas 进行迁移。
 
 有没有办法在合约部署后进行修改或升级呢？答案是有的，那就是**代理模式**。
 
@@ -3121,7 +3121,7 @@ Solidity合约部署在链上之后，代码是不可变的（immutable）。这
 代理模式主要有两个好处：
 
 1. 可升级：当我们需要升级合约的逻辑时，只需要将代理合约指向新的逻辑合约。
-2. 省gas：如果多个合约复用一套逻辑，我们只需部署一个逻辑合约，然后再部署多个只保存数据的代理合约，指向逻辑合约。
+2. 省 gas：如果多个合约复用一套逻辑，我们只需部署一个逻辑合约，然后再部署多个只保存数据的代理合约，指向逻辑合约。
 
 ### 代理合约
 
@@ -3152,9 +3152,9 @@ contract Proxy {
 
 `Proxy`的回调函数将外部对本合约的调用委托给`Logic`合约。这个回调函数很别致，它利用内联汇编（inline assembly），让本来不能有返回值的回调函数有了返回值。其中用到的内联汇编操作码：
 
-- `calldatacopy(t, f, s)`：将`calldata`（输入数据）从位置f开始复制s字节到`mem`（内存）的位置`t`。
-- `delegatecall(g, a, in, insize, out, outsize)`：调用地址a的合约，输入为`mem[in..(in+insize))`，输出为`mem[out..(out+outsize))`，提供gwei的以太坊gas。这个操作码在错误时返回`0`，在成功时返回`1`。
-- `returndatacopy(t, f, s)`：将`returndata`（输出数据）从位置f开始复制s字节到`mem`（内存）的位置t。
+- `calldatacopy(t, f, s)`：将`calldata`（输入数据）从位置 f 开始复制 s 字节到`mem`（内存）的位置`t`。
+- `delegatecall(g, a, in, insize, out, outsize)`：调用地址 a 的合约，输入为`mem[in..(in+insize))`，输出为`mem[out..(out+outsize))`，提供 gwei 的以太坊 gas。这个操作码在错误时返回`0`，在成功时返回`1`。
+- `returndatacopy(t, f, s)`：将`returndata`（输出数据）从位置 f 开始复制 s 字节到`mem`（内存）的位置 t。
 - `switch`：基础版`if/else`，不同的情况`case`返回不同值。可以有一个默认的`default`情况。
 - `return(p, s)`：终止函数执行, 返回数据`mem[p..(p+s))`。
 - `revert(p, s)`：终止函数执行, 回滚状态，返回数据`mem[p..(p+s))`。
@@ -3196,7 +3196,7 @@ fallback() external payable {
 
 #### 逻辑合约`Logic`
 
-这是一个非常简单的逻辑合约，只是为了演示代理合约。它包含2个变量，1个事件，1个函数：
+这是一个非常简单的逻辑合约，只是为了演示代理合约。它包含 2 个变量，1 个事件，1 个函数：
 
 - `implementation`：占位变量，与`Proxy`合约保持一致，防止插槽冲突。
 - `x`：`uint`变量，被设置为`99`。
@@ -3225,7 +3225,7 @@ contract Logic {
 
 `Caller`合约会演示如何调用一个代理合约，它也非常简单。
 
-它有1个变量，2个函数：
+它有 1 个变量，2 个函数：
 
 - `proxy`：状态变量，记录代理合约地址。
 - 构造函数：在部署合约时初始化`proxy`变量。
@@ -3252,29 +3252,29 @@ contract Caller{
 
 ## 17. 可升级合约
 
-介绍可升级合约（Upgradeable Contract）。教学用的合约由OpenZeppelin中的合约简化而来，可能有安全问题，不要用于生产环境。
+介绍可升级合约（Upgradeable Contract）。教学用的合约由 OpenZeppelin 中的合约简化而来，可能有安全问题，不要用于生产环境。
 
 如果你理解了代理合约，就很容易理解可升级合约。它就是一个可以更改逻辑合约的代理合约。
 
 ![](../pic/solidity-3-17-1.png)
 
-下面我们实现一个简单的可升级合约，它包含3个合约：代理合约，旧的逻辑合约，和新的逻辑合约。
+下面我们实现一个简单的可升级合约，它包含 3 个合约：代理合约，旧的逻辑合约，和新的逻辑合约。
 
 ### 代理合约
 
-这个代理合约比[16-代理合约](#16-代理合约)中的简单。我们没有在它的fallback()函数中使用内联汇编，而仅仅用了`implementation.delegatecall(msg.data);`。因此，回调函数没有返回值，但足够教学使用了。
+这个代理合约比[16-代理合约](#16-代理合约)中的简单。我们没有在它的 fallback()函数中使用内联汇编，而仅仅用了`implementation.delegatecall(msg.data);`。因此，回调函数没有返回值，但足够教学使用了。
 
-它包含3个变量：
+它包含 3 个变量：
 
 - `implementation`：逻辑合约地址。
-- `admin`：admin地址。
+- `admin`：admin 地址。
 - `words`：字符串，可以通过逻辑合约的函数改变。
 
-它包含3个函数：
+它包含 3 个函数：
 
-- 构造函数：初始化admin和逻辑合约地址。
+- 构造函数：初始化 admin 和逻辑合约地址。
 - `fallback()`：回调函数，将调用委托给逻辑合约。
-- `upgrade()`：升级函数，改变逻辑合约地址，只能由admin调用。
+- `upgrade()`：升级函数，改变逻辑合约地址，只能由 admin 调用。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -3309,7 +3309,7 @@ contract SimpleUpgrade {
 
 ### 旧逻辑合约
 
-这个逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突。它只有一个函数`foo()`，将代理合约中的`words`的值改为`"old"`。
+这个逻辑合约包含 3 个状态变量，与保持代理合约一致，防止插槽冲突。它只有一个函数`foo()`，将代理合约中的`words`的值改为`"old"`。
 
 ```js
 // 逻辑合约1
@@ -3328,7 +3328,7 @@ contract Logic1 {
 
 ### 新逻辑合约
 
-这个逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突。它只有一个函数`foo()`，将代理合约中的`words`的值改为`"new"`。
+这个逻辑合约包含 3 个状态变量，与保持代理合约一致，防止插槽冲突。它只有一个函数`foo()`，将代理合约中的`words`的值改为`"new"`。
 
 ```js
 // 逻辑合约2
@@ -3347,13 +3347,13 @@ contract Logic2 {
 
 ## 18. 透明代理
 
-介绍代理合约的选择器冲突（Selector Clash），以及这一问题的解决方案：透明代理（Transparent Proxy）。教学代码由OpenZeppelin的[TransparentUpgradeableProxy](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/transparent/TransparentUpgradeableProxy.sol)简化而成，不应用于生产。
+介绍代理合约的选择器冲突（Selector Clash），以及这一问题的解决方案：透明代理（Transparent Proxy）。教学代码由 OpenZeppelin 的[TransparentUpgradeableProxy](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/transparent/TransparentUpgradeableProxy.sol)简化而成，不应用于生产。
 
 ### 选择器冲突
 
-智能合约中，函数选择器（selector）是函数签名的哈希的前4个字节。例如mint(address account)的选择器为bytes4(keccak256("mint(address)"))，也就是0x6a627842。
+智能合约中，函数选择器（selector）是函数签名的哈希的前 4 个字节。例如 mint(address account)的选择器为 bytes4(keccak256("mint(address)"))，也就是 0x6a627842。
 
-由于函数选择器仅有4个字节，范围很小，因此两个不同的函数可能会有相同的选择器，例如下面两个函数：
+由于函数选择器仅有 4 个字节，范围很小，因此两个不同的函数可能会有相同的选择器，例如下面两个函数：
 
 ```js
 // 选择器冲突的例子
@@ -3365,7 +3365,7 @@ contract Foo {
 
 示例中，函数`burn()`和`collate_propagate_storage()`的选择器都为`0x42966c68`，是一样的，这种情况被称为“选择器冲突”。在这种情况下，`EVM`无法通过函数选择器分辨用户调用哪个函数，因此该合约无法通过编译。
 
-由于代理合约和逻辑合约是两个合约，就算他们之间存在“选择器冲突”也可以正常编译，这可能会导致很严重的安全事故。举个例子，如果逻辑合约的a函数和代理合约的升级函数的选择器相同，那么管理人就会在调用`a`函数的时候，将代理合约升级成一个黑洞合约，后果不堪设想。
+由于代理合约和逻辑合约是两个合约，就算他们之间存在“选择器冲突”也可以正常编译，这可能会导致很严重的安全事故。举个例子，如果逻辑合约的 a 函数和代理合约的升级函数的选择器相同，那么管理人就会在调用`a`函数的时候，将代理合约升级成一个黑洞合约，后果不堪设想。
 
 目前，有两个可升级合约标准解决了这一问题：透明代理`Transparent Proxy`和通用可升级代理`UUPS`。
 
@@ -3378,15 +3378,15 @@ contract Foo {
 
 #### 代理合约
 
-它包含3个变量：
+它包含 3 个变量：
 
 - `implementation`：逻辑合约地址。
-- `admin`：admin地址。
+- `admin`：admin 地址。
 - `words`：字符串，可以通过逻辑合约的函数改变。
 
-它包含3个函数：
+它包含 3 个函数：
 
-- 构造函数：初始化admin和逻辑合约地址。
+- 构造函数：初始化 admin 和逻辑合约地址。
 - `fallback()`：回调函数，将调用委托给逻辑合约，不能由`admin`调用。
 - `upgrade()`：升级函数，改变逻辑合约地址，只能由`admin`调用。
 
@@ -3420,7 +3420,7 @@ contract TransparentProxy {
 
 #### 逻辑合约
 
-这里的新、旧逻辑合约与[17-可升级合约](#17-可升级合约)一样。逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突；包含一个函数`foo()`，旧逻辑合约会将`words`的值改为`"old"`，新的会改为`"new"`。
+这里的新、旧逻辑合约与[17-可升级合约](#17-可升级合约)一样。逻辑合约包含 3 个状态变量，与保持代理合约一致，防止插槽冲突；包含一个函数`foo()`，旧逻辑合约会将`words`的值改为`"old"`，新的会改为`"new"`。
 
 ```js
 // 旧逻辑合约
@@ -3452,33 +3452,33 @@ contract Logic2 {
 
 ## 19. 通用可升级代理
 
-介绍代理合约中选择器冲突（Selector Clash）的另一个解决办法：通用可升级代理（UUPS，universal upgradeable proxy standard）。教学代码由OpenZeppelin的`UUPSUpgradeable`简化而成，不应用于生产。
+介绍代理合约中选择器冲突（Selector Clash）的另一个解决办法：通用可升级代理（UUPS，universal upgradeable proxy standard）。教学代码由 OpenZeppelin 的`UUPSUpgradeable`简化而成，不应用于生产。
 
 ### UUPS
 
-我们在[18-透明代理](#18-透明代理)已经学习了"选择器冲突"（Selector Clash），即合约存在两个选择器相同的函数，可能会造成严重后果。作为透明代理的替代方案，UUPS也能解决这一问题。
+我们在[18-透明代理](#18-透明代理)已经学习了"选择器冲突"（Selector Clash），即合约存在两个选择器相同的函数，可能会造成严重后果。作为透明代理的替代方案，UUPS 也能解决这一问题。
 
 UUPS（universal upgradeable proxy standard，通用可升级代理）将升级函数放在逻辑合约中。这样一来，如果有其它函数与升级函数存在“选择器冲突”，编译时就会报错。
 
-下表中概括了普通可升级合约，透明代理，和UUPS的不同点：
+下表中概括了普通可升级合约，透明代理，和 UUPS 的不同点：
 
 ![](../pic/solidity-3-18-1.png)
 
-### UUPS合约
+### UUPS 合约
 
-首先我们要复习一下`delegatecall`。如果用户A通过合约B（代理合约）去`delegatecall`合约C（逻辑合约），上下文仍是合约B的上下文，`msg.sender`仍是用户A而不是合约B。因此，UUPS合约可以将升级函数放在逻辑合约中，并检查调用者是否为管理员。
+首先我们要复习一下`delegatecall`。如果用户 A 通过合约 B（代理合约）去`delegatecall`合约 C（逻辑合约），上下文仍是合约 B 的上下文，`msg.sender`仍是用户 A 而不是合约 B。因此，UUPS 合约可以将升级函数放在逻辑合约中，并检查调用者是否为管理员。
 
-#### UUPS的代理合约
+#### UUPS 的代理合约
 
-UUPS的代理合约看起来像是个不可升级的代理合约，非常简单，因为升级函数被放在了逻辑合约中。它包含3个变量：
+UUPS 的代理合约看起来像是个不可升级的代理合约，非常简单，因为升级函数被放在了逻辑合约中。它包含 3 个变量：
 
 - `implementation`：逻辑合约地址。
-- `admin`：admin地址。
+- `admin`：admin 地址。
 - `words`：字符串，可以通过逻辑合约的函数改变。
 
-它包含2个函数
+它包含 2 个函数
 
-- 构造函数：初始化admin和逻辑合约地址。
+- 构造函数：初始化 admin 和逻辑合约地址。
 - `fallback()`：回调函数，将调用委托给逻辑合约。
 
 ```js
@@ -3500,12 +3500,12 @@ contract UUPSProxy {
 }
 ```
 
-#### UUPS的逻辑合约
+#### UUPS 的逻辑合约
 
-UUPS的逻辑合约与[17-可升级合约](#17-可升级合约)中的不同是多了个升级函数。UUPS逻辑合约包含3个状态变量，与保持代理合约一致，防止插槽冲突。它包含2个
+UUPS 的逻辑合约与[17-可升级合约](#17-可升级合约)中的不同是多了个升级函数。UUPS 逻辑合约包含 3 个状态变量，与保持代理合约一致，防止插槽冲突。它包含 2 个
 
 - `upgrade()`：升级函数，将改变逻辑合约地址`implementation`，只能由`admin`调用。
-- `foo()`：旧UUPS逻辑合约会将`words`的值改为`"old"`，新的会改为`"new"`。
+- `foo()`：旧 UUPS 逻辑合约会将`words`的值改为`"old"`，新的会改为`"new"`。
 
 ```js
 // UUPS逻辑合约（升级函数写在逻辑合约内）
@@ -3551,26 +3551,26 @@ contract UUPS2{
 
 ## 20. 多签钱包
 
-V神曾说过，多签钱包要比硬件钱包更加安全（[推文](https://twitter.com/VitalikButerin/status/1558886893995134978?s=20&t=4WyoEWhwHNUtAuABEIlcRw)）。这一讲，我们将介绍多签钱包，并且写一个极简版多签钱包合约。教学代码（150行代码）由gnosis safe合约（几千行代码）简化而成。
+V 神曾说过，多签钱包要比硬件钱包更加安全（[推文](https://twitter.com/VitalikButerin/status/1558886893995134978?s=20&t=4WyoEWhwHNUtAuABEIlcRw)）。这一讲，我们将介绍多签钱包，并且写一个极简版多签钱包合约。教学代码（150 行代码）由 gnosis safe 合约（几千行代码）简化而成。
 
 ### 多签钱包
 
-多签钱包是一种电子钱包，特点是交易被多个私钥持有者（多签人）授权后才能执行：例如钱包由3个多签人管理，每笔交易需要至少2人签名授权。多签钱包可以防止单点故障（私钥丢失，单人作恶），更加去中心化，更加安全，被很多DAO采用。
+多签钱包是一种电子钱包，特点是交易被多个私钥持有者（多签人）授权后才能执行：例如钱包由 3 个多签人管理，每笔交易需要至少 2 人签名授权。多签钱包可以防止单点故障（私钥丢失，单人作恶），更加去中心化，更加安全，被很多 DAO 采用。
 
-Gnosis Safe多签钱包是以太坊最流行的多签钱包，管理近400亿美元资产，合约经过审计和实战测试，支持多链（以太坊，BSC，Polygon等），并提供丰富的DAPP支持。
+Gnosis Safe 多签钱包是以太坊最流行的多签钱包，管理近 400 亿美元资产，合约经过审计和实战测试，支持多链（以太坊，BSC，Polygon 等），并提供丰富的 DAPP 支持。
 
 ### 多签钱包合约
 
 在以太坊上的多签钱包其实是智能合约，属于合约钱包。下面我们写一个极简版多签钱包`MultisigWallet`合约，它的逻辑非常简单：
 
-1. 设置多签人和门槛（链上）：部署多签合约时，我们需要初始化多签人列表和执行门槛（至少n个多签人签名授权后，交易才能执行）。Gnosis Safe多签钱包支持增加/删除多签人以及改变执行门槛，但在咱们的极简版中不考虑这一功能。
+1. 设置多签人和门槛（链上）：部署多签合约时，我们需要初始化多签人列表和执行门槛（至少 n 个多签人签名授权后，交易才能执行）。Gnosis Safe 多签钱包支持增加/删除多签人以及改变执行门槛，但在咱们的极简版中不考虑这一功能。
 2. 创建交易（链下）：一笔待授权的交易包含以下内容
    1. `to`：目标合约。
    2. `value`：交易发送的以太坊数量。
    3. `data`：calldata，包含调用函数的选择器和参数。
-   4. `nonce`：初始为0，随着多签合约每笔成功执行的交易递增的值，可以防止签名重放攻击。
-   5. `chainid`：链id，防止不同链的签名重放攻击。
-3. 收集多签签名（链下）：将上一步的交易ABI编码并计算哈希，得到交易哈希，然后让多签人签名，并拼接到一起的到打包签名。
+   4. `nonce`：初始为 0，随着多签合约每笔成功执行的交易递增的值，可以防止签名重放攻击。
+   5. `chainid`：链 id，防止不同链的签名重放攻击。
+3. 收集多签签名（链下）：将上一步的交易 ABI 编码并计算哈希，得到交易哈希，然后让多签人签名，并拼接到一起的到打包签名。
 
 ```js
 交易哈希: 0xc1b055cf8e78338db21407b425114a2e258b0318879327945b661bfdea570e66
@@ -3587,7 +3587,7 @@ Gnosis Safe多签钱包是以太坊最流行的多签钱包，管理近400亿美
 
 #### 事件
 
-`MultisigWallet`合约有2个事件，`ExecutionSuccess`和`ExecutionFailure`，分别在交易成功和失败时释放，参数为交易哈希。
+`MultisigWallet`合约有 2 个事件，`ExecutionSuccess`和`ExecutionFailure`，分别在交易成功和失败时释放，参数为交易哈希。
 
 ```js
 event ExecutionSuccess(bytes32 txHash);    // 交易成功事件
@@ -3596,13 +3596,13 @@ event ExecutionFailure(bytes32 txHash);    // 交易失败事件
 
 #### 状态变量
 
-`MultisigWallet`合约有5个状态变量：
+`MultisigWallet`合约有 5 个状态变量：
 
 1. `owners`：多签持有人数组
 2. `isOwner`：`address => bool`的映射，记录一个地址是否为多签持有人。
 3. `ownerCount`：多签持有人数量
-4. `threshold`：多签执行门槛，交易至少有n个多签人签名才能被执行。
-5. `nonce`：初始为0，随着多签合约每笔成功执行的交易递增的值，可以防止签名重放攻击。
+4. `threshold`：多签执行门槛，交易至少有 n 个多签人签名才能被执行。
+5. `nonce`：初始为 0，随着多签合约每笔成功执行的交易递增的值，可以防止签名重放攻击。
 
 ```js
 address[] public owners;                   // 多签持有人数组
@@ -3614,7 +3614,7 @@ uint256 public nonce;                      // nonce，防止签名重放攻击
 
 #### 函数
 
-`MultisigWallet`合约有6个函数：
+`MultisigWallet`合约有 6 个函数：
 
 - 构造函数：调用`_setupOwners()`，初始化和多签持有人和执行门槛相关的变量。
 
@@ -3628,7 +3628,7 @@ constructor(
 }
 ```
 
-- `_setupOwners()`：在合约部署时被构造函数调用，初始化`owners`，`isOwner`，`ownerCount`，`threshold`状态变量。传入的参数中，执行门槛需大于等于1且小于等于多签人数；多签地址不能为0地址且不能重复。
+- `_setupOwners()`：在合约部署时被构造函数调用，初始化`owners`，`isOwner`，`ownerCount`，`threshold`状态变量。传入的参数中，执行门槛需大于等于 1 且小于等于多签人数；多签地址不能为 0 地址且不能重复。
 
 ```js
 /// @dev 初始化owners, isOwner, ownerCount,threshold
@@ -3680,7 +3680,7 @@ function execTransaction(
 }
 ```
 
-- `checkSignatures()`：检查签名和交易数据的哈希是否对应，数量是否达到门槛，若否，交易会`revert`。单个签名长度为65字节，因此打包签名的长度要长于`threshold * 65`。调用了`signatureSplit()`分离出单个签名。这个函数的大致思路：
+- `checkSignatures()`：检查签名和交易数据的哈希是否对应，数量是否达到门槛，若否，交易会`revert`。单个签名长度为 65 字节，因此打包签名的长度要长于`threshold * 65`。调用了`signatureSplit()`分离出单个签名。这个函数的大致思路：
   - 用`ecdsa`获取签名地址.
   - 利用`currentOwner > lastOwner`确定签名来自不同多签（多签地址递增）。
   - 利用`isOwner[currentOwner]`确定签名者为多签持有人。
@@ -3789,9 +3789,9 @@ PeopleDao Gnosis Safe 中英文[使用教程](https://peopledao.mirror.xyz/nFCBX
 
 金库合约是 DeFi 乐高中的基础，它允许你把基础资产（代币）质押到合约中，换取一定收益，包括以下应用场景:
 
-- 收益农场: 在Yearn Finance中，你可以质押`USDT`获取利息。
-- 借贷: 在AAVE中，你可以出借`ETH`获取存款利息和贷款。
-- 质押: 在Lido中，你可以质押`ETH`参与ETH 2.0质押，得到可以生息的`stETH`。
+- 收益农场: 在 Yearn Finance 中，你可以质押`USDT`获取利息。
+- 借贷: 在 AAVE 中，你可以出借`ETH`获取存款利息和贷款。
+- 质押: 在 Lido 中，你可以质押`ETH`参与 ETH 2.0 质押，得到可以生息的`stETH`。
 
 ### ERC4626
 
@@ -3799,9 +3799,9 @@ PeopleDao Gnosis Safe 中英文[使用教程](https://peopledao.mirror.xyz/nFCBX
 
 由于金库合约缺乏标准，写法五花八门，一个收益聚合器需要写很多接口对接不同的 DeFi 项目。ERC4626 代币化金库标准（Tokenized Vault Standard）横空出世，使得 DeFi 能够轻松扩展。它具有以下优点:
 
-1. 代币化: ERC4626继承了ERC20，向金库存款时，将得到同样符合ERC20标准的金库份额，比如质押ETH，自动获得stETH。
-2. 更好的流通性: 由于代币化，你可以在不取回基础资产的情况下，利用金库份额做其他事情。拿Lido的stETH为例，你可以用它在Uniswap上提供流动性或交易，而不需要取出其中的ETH。
-3. 更好的可组合性: 有了标准之后，用一套接口可以和所有ERC4626金库交互，让基于金库的应用、插件、工具开发更容易。
+1. 代币化: ERC4626 继承了 ERC20，向金库存款时，将得到同样符合 ERC20 标准的金库份额，比如质押 ETH，自动获得 stETH。
+2. 更好的流通性: 由于代币化，你可以在不取回基础资产的情况下，利用金库份额做其他事情。拿 Lido 的 stETH 为例，你可以用它在 Uniswap 上提供流动性或交易，而不需要取出其中的 ETH。
+3. 更好的可组合性: 有了标准之后，用一套接口可以和所有 ERC4626 金库交互，让基于金库的应用、插件、工具开发更容易。
 
 总而言之，ERC4626 对于 DeFi 的重要性不亚于 ERC721 对于 NFT 的重要性。
 
@@ -3809,10 +3809,10 @@ PeopleDao Gnosis Safe 中英文[使用教程](https://peopledao.mirror.xyz/nFCBX
 
 ERC4626 标准主要实现了一下几个逻辑：
 
-1. ERC20: ERC4626继承了ERC20，金库份额就是用ERC20代币代表的：用户将特定的ERC20基础资产（比如WETH）存进金库，合约会给他铸造特定数量的金库份额代币；当用户从金库中提取基础资产时，会销毁相应数量的金库份额代币。`asset()`函数会返回金库的基础资产的代币地址。
+1. ERC20: ERC4626 继承了 ERC20，金库份额就是用 ERC20 代币代表的：用户将特定的 ERC20 基础资产（比如 WETH）存进金库，合约会给他铸造特定数量的金库份额代币；当用户从金库中提取基础资产时，会销毁相应数量的金库份额代币。`asset()`函数会返回金库的基础资产的代币地址。
 2. 存款逻辑：让用户存入基础资产，并铸造相应数量的金库份额。相关函数为`deposit()`和`mint()`。`deposit(uint assets, address receiver)`函数让用户存入`assets`单位的资产，并铸造相应数量的金库份额给`receiver`地址。`mint(uint shares, address receiver)`与它类似，只不过是以将铸造的金库份额作为参数。
 3. 提款逻辑：让用户销毁金库份额，并提取金库中相应数量的基础资产。相关函数为`withdraw()`和`redeem()`，前者以取出基础资产数量为参数，后者以销毁的金库份额为参数。
-4. 会计和限额逻辑：ERC4626标准中其他的函数是为了统计金库中的资产，存款/提款限额，和存款/提款的基础资产和金库份额数量。
+4. 会计和限额逻辑：ERC4626 标准中其他的函数是为了统计金库中的资产，存款/提款限额，和存款/提款的基础资产和金库份额数量。
 
 ### IERC4626 接口合约
 
@@ -4215,17 +4215,17 @@ contract ERC4626 is ERC20, IERC4626 {
 
 ![](../pic/solidity-22-1.png)
 
-[EIP712类型化数据签名](https://eips.ethereum.org/EIPS/eip-712)是一种更高级、更安全的签名方法。当支持 EIP712 的 Dapp 请求签名时，钱包会展示签名消息的原始数据，用户可以在验证数据符合预期之后签名。
+[EIP712 类型化数据签名](https://eips.ethereum.org/EIPS/eip-712)是一种更高级、更安全的签名方法。当支持 EIP712 的 Dapp 请求签名时，钱包会展示签名消息的原始数据，用户可以在验证数据符合预期之后签名。
 
 ![](../pic/solidity-22-2.png)
 
 ### EIP712 使用方法
 
-EIP712 的应用一般包含链下签名（前端或脚本）和链上验证（合约）两部分，下面我们用一个简单的例子`EIP712Storage`来介绍EIP712的使用方法。`EIP712Storage`合约有一个状态变量`number`，需要验证EIP712签名才可以更改。
+EIP712 的应用一般包含链下签名（前端或脚本）和链上验证（合约）两部分，下面我们用一个简单的例子`EIP712Storage`来介绍 EIP712 的使用方法。`EIP712Storage`合约有一个状态变量`number`，需要验证 EIP712 签名才可以更改。
 
 #### 链下签名
 
-1. EIP712签名必须包含一个`EIP712Domain`部分，它包含了合约的name，version（一般约定为 “1”），chainId，和verifyingContract（验证签名的合约地址）。
+1. EIP712 签名必须包含一个`EIP712Domain`部分，它包含了合约的 name，version（一般约定为 “1”），chainId，和 verifyingContract（验证签名的合约地址）。
 
 ```js
 EIP712Domain: [
@@ -4283,7 +4283,7 @@ console.log("Signature:", signature);
 
 #### 链上验证
 
-接下来就是`EIP712Storage`合约部分，它需要验证签名，如果通过，则修改`number`状态变量。它有5个状态变量。
+接下来就是`EIP712Storage`合约部分，它需要验证签名，如果通过，则修改`number`状态变量。它有 5 个状态变量。
 
 1. `EIP712DOMAIN_TYPEHASH`: `EIP712Domain`的类型哈希，为常量。
 2. `STORAGE_TYPEHASH`: `Storage`的类型哈希，为常量。
@@ -4291,11 +4291,11 @@ console.log("Signature:", signature);
 4. `number`: 合约中存储值的状态变量，可以被`permitStore()`方法修改。
 5. `owner`: 合约所有者，在`constructor()`中初始化，在`permitStore()`方法中验证签名的有效性。
 
-另外，`EIP712Storage`合约有3个函数。
+另外，`EIP712Storage`合约有 3 个函数。
 
 1. 构造函数: 初始化`DOMAIN_SEPARATOR`和`owner`。
 2. `retrieve()`: 读取`number`的值。
-3. `permitStore`: 验证EIP712签名，并修改`number`的值。首先，它先将签名拆解为`r`, `s`, `v`。然后用`DOMAIN_SEPARATOR`, `STORAGE_TYPEHASH`, 调用者地址，和输入的`_num`参数拼出签名的消息文本`digest`。最后利用`ECDSA`的`recover()`方法恢复出签名者地址，如果签名有效，则更新`number`的值。
+3. `permitStore`: 验证 EIP712 签名，并修改`number`的值。首先，它先将签名拆解为`r`, `s`, `v`。然后用`DOMAIN_SEPARATOR`, `STORAGE_TYPEHASH`, 调用者地址，和输入的`_num`参数拼出签名的消息文本`digest`。最后利用`ECDSA`的`recover()`方法恢复出签名者地址，如果签名有效，则更新`number`的值。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -4381,14 +4381,14 @@ contract EIP712Storage {
 
 ERC20，以太坊最流行的代币标准。它流行的一个主要原因是`approve`和`transferFrom`两个函数搭配使用，使得代币不仅可以在外部拥有账户（EOA）之间转移，还可以被其他合约使用。
 
-但是，ERC20的`approve`函数限制了只有代币所有者才能调用，这意味着所有`ERC20`代币的初始操作必须由EOA执行。举个例子，用户A在去中心化交易所使用`USDT`交换`ETH`，必须完成两个交易：第一步用户A调用`approve`将`USDT`授权给合约，第二步用户A调用合约进行交换。非常麻烦，并且用户必须持有`ETH`用于支付交易的gas。
+但是，ERC20 的`approve`函数限制了只有代币所有者才能调用，这意味着所有`ERC20`代币的初始操作必须由 EOA 执行。举个例子，用户 A 在去中心化交易所使用`USDT`交换`ETH`，必须完成两个交易：第一步用户 A 调用`approve`将`USDT`授权给合约，第二步用户 A 调用合约进行交换。非常麻烦，并且用户必须持有`ETH`用于支付交易的 gas。
 
 ### ERC20Permit
 
-EIP-2612提出了ERC20Permit，扩展了ERC20标准，添加了一个`permit`函数，允许用户通过 EIP-712签名修改授权，而不是通过`msg.sender`。这有两点好处：
+EIP-2612 提出了 ERC20Permit，扩展了 ERC20 标准，添加了一个`permit`函数，允许用户通过 EIP-712 签名修改授权，而不是通过`msg.sender`。这有两点好处：
 
 1. 授权这步仅需用户在链下签名，减少一笔交易。
-2. 签名后，用户可以委托第三方进行后续交易，不需要持有 ETH：用户 A 可以将签名发送给 拥有gas的第三方 B，委托 B 来执行后续交易。
+2. 签名后，用户可以委托第三方进行后续交易，不需要持有 ETH：用户 A 可以将签名发送给 拥有 gas 的第三方 B，委托 B 来执行后续交易。
 
 ![](../pic/solidity-23-1.png)
 
@@ -4398,12 +4398,12 @@ EIP-2612提出了ERC20Permit，扩展了ERC20标准，添加了一个`permit`函
 
 首先，让我们学习下 ERC20Permit 的接口合约，它定义了 3 个函数：
 
-- `permit()`: 根据`owner`的签名, 将`owenr`的ERC20代币余额授权给`spender`，数量为`value`。要求：
+- `permit()`: 根据`owner`的签名, 将`owenr`的 ERC20 代币余额授权给`spender`，数量为`value`。要求：
   - `spender`不能是零地址。
   - `deadline`必须是未来的时间戳。
-  - `v`，`r`和`s`必须是`owner`对EIP712格式的函数参数的有效`secp256k1`签名。
-  - 签名必须使用`owner`当前的nonce。
-- `nonces()`: 返回`owner`的当前nonce。每次为`permit()`函数生成签名时，都必须包括此值。每次成功调用`permit()`函数都会将`owner`的 nonce 增加 1，防止多次使用同一个签名。
+  - `v`，`r`和`s`必须是`owner`对 EIP712 格式的函数参数的有效`secp256k1`签名。
+  - 签名必须使用`owner`当前的 nonce。
+- `nonces()`: 返回`owner`的当前 nonce。每次为`permit()`函数生成签名时，都必须包括此值。每次成功调用`permit()`函数都会将`owner`的 nonce 增加 1，防止多次使用同一个签名。
 - `DOMAIN_SEPARATOR()`: 返回用于编码`permit()`函数的签名的域分隔符（domain separator）。
 
 ```js
@@ -4444,16 +4444,16 @@ interface IERC20Permit {
 
 下面，让我们写一个简单的 ERC20Permit 合约，它实现了 IERC20Permit 定义的所有接口。合约包含 2 个状态变量:
 
-- `_nonces`: `address -> uint`的映射，记录了所有用户当前的nonce值
+- `_nonces`: `address -> uint`的映射，记录了所有用户当前的 nonce 值
 - `_PERMIT_TYPEHASH`: 常量，记录了`permit()`函数的类型哈希
 
 合约包含 5 个函数:
 
 - 构造函数: 初始化代币的`name`和`symbol`。
-- `permit()`: ERC20Permit最核心的函数，实现了IERC20Permit的`permit()`。它首先检查签名是否过期，然后用`_PERMIT_TYPEHASH`, `owner`, `spender`, `value`, `nonce`, `deadline`还原签名消息，并验证签名是否有效。如果签名有效，则调用ERC20的`_approve()`函数进行授权操作。
-- `nonces()`: 实现了IERC20Permit的`nonces()`函数。
-- `DOMAIN_SEPARATOR()`: 实现了IERC20Permit的`DOMAIN_SEPARATOR()`函数。
-- `_useNonce()`: 消费`nonce`的函数，返回用户当前的`nonce`，并增加1。
+- `permit()`: ERC20Permit 最核心的函数，实现了 IERC20Permit 的`permit()`。它首先检查签名是否过期，然后用`_PERMIT_TYPEHASH`, `owner`, `spender`, `value`, `nonce`, `deadline`还原签名消息，并验证签名是否有效。如果签名有效，则调用 ERC20 的`_approve()`函数进行授权操作。
+- `nonces()`: 实现了 IERC20Permit 的`nonces()`函数。
+- `DOMAIN_SEPARATOR()`: 实现了 IERC20Permit 的`DOMAIN_SEPARATOR()`函数。
+- `_useNonce()`: 消费`nonce`的函数，返回用户当前的`nonce`，并增加 1。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -4534,11 +4534,11 @@ contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
 
 ### 安全注意
 
-ERC20Permit利用链下签名进行授权给用户带来了便利，同时带来了风险。一些黑客会利用这一特性进行钓鱼攻击，骗取用户签名并盗取资产。2023年4月的一起针对USDC的[签名钓鱼攻击](https://twitter.com/0xAA_Science/status/1652880488095440897?s=20)让一位用户损失了 228w u 的资产。
+ERC20Permit 利用链下签名进行授权给用户带来了便利，同时带来了风险。一些黑客会利用这一特性进行钓鱼攻击，骗取用户签名并盗取资产。2023 年 4 月的一起针对 USDC 的[签名钓鱼攻击](https://twitter.com/0xAA_Science/status/1652880488095440897?s=20)让一位用户损失了 228w u 的资产。
 
 **签名时，一定要谨慎的阅读签名内容！**
 
-同时，一些合约在集成`permit`时，也会带来DoS（拒绝服务）的风险。因为`permit`在执行时会用掉当前的`nonce`值，如果合约的函数中包含`permit`操作，则攻击者可以通过抢跑执行`permit`从而使得目标交易因为`nonce`被占用而回滚。
+同时，一些合约在集成`permit`时，也会带来 DoS（拒绝服务）的风险。因为`permit`在执行时会用掉当前的`nonce`值，如果合约的函数中包含`permit`操作，则攻击者可以通过抢跑执行`permit`从而使得目标交易因为`nonce`被占用而回滚。
 
 ## 24. 跨链桥
 
@@ -4546,9 +4546,9 @@ ERC20Permit利用链下签名进行授权给用户带来了便利，同时带来
 
 ### 什么是跨链桥
 
-跨链桥是一种区块链协议，它允许在两个或多个区块链之间移动数字资产和信息。例如，一个在以太坊主网上运行的ERC20代币，可以通过跨链桥转移到其他兼容以太坊的侧链或独立链。
+跨链桥是一种区块链协议，它允许在两个或多个区块链之间移动数字资产和信息。例如，一个在以太坊主网上运行的 ERC20 代币，可以通过跨链桥转移到其他兼容以太坊的侧链或独立链。
 
-同时，跨链桥不是区块链原生支持的，跨链操作需要可信第三方来执行，这也带来了风险。近两年，针对跨链桥的攻击已造成超过**20亿美元**的用户资产损失。
+同时，跨链桥不是区块链原生支持的，跨链操作需要可信第三方来执行，这也带来了风险。近两年，针对跨链桥的攻击已造成超过**20 亿美元**的用户资产损失。
 
 ### 跨链桥的种类
 
@@ -4564,13 +4564,13 @@ ERC20Permit利用链下签名进行授权给用户带来了便利，同时带来
 
 ### 搭建一个简单的跨链桥
 
-为了更好理解这个跨链桥，我们将搭建一个简单的跨链桥，并实现Goerli测试网和Sepolia测试网之间的ERC20代币转移。我们使用的是burn/mint方式，源链上的代币将被销毁，并在目标链上创建。这个跨链桥由一个智能合约（部署在两条链上）和一个Ethers.js脚本组成。
+为了更好理解这个跨链桥，我们将搭建一个简单的跨链桥，并实现 Goerli 测试网和 Sepolia 测试网之间的 ERC20 代币转移。我们使用的是 burn/mint 方式，源链上的代币将被销毁，并在目标链上创建。这个跨链桥由一个智能合约（部署在两条链上）和一个 Ethers.js 脚本组成。
 
 **请注意，这是一个非常简单的跨链桥实现，仅用于教学目的。它没有处理一些可能出现的问题，如交易失败、链的重组等。在生产环境中，建议使用专业的跨链桥解决方案或其他经过充分测试和审计的框架。**
 
 #### 跨链代币合约
 
-首先，我们需要在Goerli和Sepolia测试网上部署一个ERC20代币合约，`CrossChainToken`。这个合约中定义了代币的名字、符号和总供应量，还有一个用于跨链转移的`bridge()`函数。
+首先，我们需要在 Goerli 和 Sepolia 测试网上部署一个 ERC20 代币合约，`CrossChainToken`。这个合约中定义了代币的名字、符号和总供应量，还有一个用于跨链转移的`bridge()`函数。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -4626,7 +4626,7 @@ contract CrossChainToken is ERC20, Ownable {
 
 #### 跨链脚本
 
-有了代币合约之后，我们需要一个服务器来处理跨链事件。我们可以编写一个ethers.js脚本（v6版本）监听Bridge事件，当事件被触发时，在目标链上创建同样数量的代币。
+有了代币合约之后，我们需要一个服务器来处理跨链事件。我们可以编写一个 ethers.js 脚本（v6 版本）监听 Bridge 事件，当事件被触发时，在目标链上创建同样数量的代币。
 
 ```js
 import { ethers } from "ethers";
@@ -4634,7 +4634,7 @@ import { ethers } from "ethers";
 // 初始化两条链的provider
 const providerGoerli = new ethers.JsonRpcProvider("Goerli_Provider_URL");
 const providerSepolia = new ethers.JsonRpcProvider(
-  "Sepolia_Provider_URL://eth-sepolia.g.alchemy.com/v2/RgxsjQdKTawszh80TpJ-14Y8tY7cx5W2",
+  "Sepolia_Provider_URL://eth-sepolia.g.alchemy.com/v2/RgxsjQdKTawszh80TpJ-14Y8tY7cx5W2"
 );
 
 // 初始化两条链的signer
@@ -4657,12 +4657,12 @@ const abi = [
 const contractGoerli = new ethers.Contract(
   contractAddressGoerli,
   abi,
-  walletGoerli,
+  walletGoerli
 );
 const contractSepolia = new ethers.Contract(
   contractAddressSepolia,
   abi,
-  walletSepolia,
+  walletSepolia
 );
 
 const main = async () => {
@@ -4672,7 +4672,7 @@ const main = async () => {
     // 监听chain Sepolia的Bridge事件，然后在Goerli上执行mint操作，完成跨链
     contractSepolia.on("Bridge", async (user, amount) => {
       console.log(
-        `Bridge event on Chain Sepolia: User ${user} burned ${amount} tokens`,
+        `Bridge event on Chain Sepolia: User ${user} burned ${amount} tokens`
       );
 
       // 在执行burn操作
@@ -4685,7 +4685,7 @@ const main = async () => {
     // 监听chain Goerli的Bridge事件，然后在Sepolia上执行mint操作，完成跨链
     contractGoerli.on("Bridge", async (user, amount) => {
       console.log(
-        `Bridge event on Chain Goerli: User ${user} burned ${amount} tokens`,
+        `Bridge event on Chain Goerli: User ${user} burned ${amount} tokens`
       );
 
       // 在执行burn操作
@@ -4708,15 +4708,15 @@ main();
 
 ### MultiCall
 
-在Solidity中，MultiCall（多重调用）合约的设计能让我们在一次交易中执行多个函数调用。它的优点如下：
+在 Solidity 中，MultiCall（多重调用）合约的设计能让我们在一次交易中执行多个函数调用。它的优点如下：
 
-- 方便性：MultiCall能让你在一次交易中对不同合约的不同函数进行调用，同时这些调用还可以使用不同的参数。比如你可以一次性查询多个地址的ERC20代币余额。
-- 节省gas：MultiCall能将多个交易合并成一次交易中的多个调用，从而节省gas。
-- 原子性：MultiCall能让用户在一笔交易中执行所有操作，保证所有操作要么全部成功，要么全部失败，这样就保持了原子性。比如，你可以按照特定的顺序进行一系列的代币交易。
+- 方便性：MultiCall 能让你在一次交易中对不同合约的不同函数进行调用，同时这些调用还可以使用不同的参数。比如你可以一次性查询多个地址的 ERC20 代币余额。
+- 节省 gas：MultiCall 能将多个交易合并成一次交易中的多个调用，从而节省 gas。
+- 原子性：MultiCall 能让用户在一笔交易中执行所有操作，保证所有操作要么全部成功，要么全部失败，这样就保持了原子性。比如，你可以按照特定的顺序进行一系列的代币交易。
 
 ### MultiCall 合约
 
-接下来让我们一起来研究一下MultiCall合约，它由MakerDAO的[MultiCall](https://github.com/mds1/multicall/blob/main/src/Multicall3.sol)简化而成。
+接下来让我们一起来研究一下 MultiCall 合约，它由 MakerDAO 的[MultiCall](https://github.com/mds1/multicall/blob/main/src/Multicall3.sol)简化而成。
 
 MultiCall 合约定义了两个结构体:
 
@@ -4725,7 +4725,7 @@ MultiCall 合约定义了两个结构体:
 
 该合约只包含了一个函数，用于执行多重调用：
 
-- `multicall()`: 这个函数的参数是一个由Call结构体组成的数组，这样做可以确保传入的target和data的长度一致。函数通过一个循环来执行多个调用，并在调用失败时回滚交易。
+- `multicall()`: 这个函数的参数是一个由 Call 结构体组成的数组，这样做可以确保传入的 target 和 data 的长度一致。函数通过一个循环来执行多个调用，并在调用失败时回滚交易。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -4769,7 +4769,7 @@ contract Multicall {
 
 ## 26. 去中心化交易所
 
-这一讲，我们将介绍恒定乘积自动做市商（Constant Product Automated Market Maker, CPAMM），它是去中心化交易所的核心机制，被Uniswap，PancakeSwap等一系列DEX采用。教学合约由[Uniswap-v2](https://github.com/Uniswap/v2-core)合约简化而来，包括了CPAMM最核心的功能。
+这一讲，我们将介绍恒定乘积自动做市商（Constant Product Automated Market Maker, CPAMM），它是去中心化交易所的核心机制，被 Uniswap，PancakeSwap 等一系列 DEX 采用。教学合约由[Uniswap-v2](https://github.com/Uniswap/v2-core)合约简化而来，包括了 CPAMM 最核心的功能。
 
 ### 自动做市商
 
@@ -4791,7 +4791,7 @@ CSAMM 的优点是可以保证代币的相对价格不变，这点在稳定币�
 
 #### 恒定乘积自动做市商
 
-恒定乘积自动做市商（CPAMM）是最流行的自动做市商模型，最早被Uniswap采用。它在交易时的约束为:
+恒定乘积自动做市商（CPAMM）是最流行的自动做市商模型，最早被 Uniswap 采用。它在交易时的约束为:
 
 $$k=x*y$$
 
@@ -4805,7 +4805,7 @@ CPAMM 的优点是拥有“无限”流动性：代币的相对价格会随着�
 
 下面，我们用智能合约写一个去中心化交易所`SimpleSwap`，支持用户交易一对代币。
 
-`SimpleSwap`继承了ERC20代币标准，方便记录流动性提供者提供的流动性。在构造器中，我们指定一对代币地址`token0`和`token1`，交易所仅支持这对代币。`reserve0`和`reserve1`记录了合约中代币的储备量。
+`SimpleSwap`继承了 ERC20 代币标准，方便记录流动性提供者提供的流动性。在构造器中，我们指定一对代币地址`token0`和`token1`，交易所仅支持这对代币。`reserve0`和`reserve1`记录了合约中代币的储备量。
 
 ```js
 contract SimpleSwap is ERC20 {
@@ -4831,24 +4831,24 @@ contract SimpleSwap is ERC20 {
 
 流动性提供者给市场提供流动性，让交易者获得更好的报价和流动性，并收取一定费用。
 
-首先，我们需要实现添加流动性的功能。当用户向代币池添加流动性时，合约要记录添加的LP份额。根据Uniswap V2，LP份额如下计算：
+首先，我们需要实现添加流动性的功能。当用户向代币池添加流动性时，合约要记录添加的 LP 份额。根据 Uniswap V2，LP 份额如下计算：
 
-1. 代币池被首次添加流动性时，LP份额 $\Delta{L}$ 由添加代币数量乘积的平方根决定:
+1. 代币池被首次添加流动性时，LP 份额 $\Delta{L}$ 由添加代币数量乘积的平方根决定:
 
    $$\Delta{L}=\sqrt{\Delta{x} *\Delta{y}}$$
 
-2. 非首次添加流动性时，LP份额由添加代币数量占池子代币储备量的比例决定（两个代币的比例取更小的那个）:
+2. 非首次添加流动性时，LP 份额由添加代币数量占池子代币储备量的比例决定（两个代币的比例取更小的那个）:
 
    $$\Delta{L}=L*\min{(\frac{\Delta{x}}{x}, \frac{\Delta{y}}{y})}$$
 
-因为 `SimpleSwap` 合约继承了 ERC20 代币标准，在计算好LP份额后，可以将份额以代币形式铸造给用户。
+因为 `SimpleSwap` 合约继承了 ERC20 代币标准，在计算好 LP 份额后，可以将份额以代币形式铸造给用户。
 
 下面的 `addLiquidity()` 函数实现了添加流动性的功能，主要步骤如下：
 
 1. 将用户添加的代币转入合约，需要用户事先给合约授权。
-2. 根据公式计算添加的流动性份额，并检查铸造的LP数量。
+2. 根据公式计算添加的流动性份额，并检查铸造的 LP 数量。
 3. 更新合约的代币储备量。
-4. 给流动性提供者铸造LP代币。
+4. 给流动性提供者铸造 LP 代币。
 5. 释放 `Mint` 事件。
 
 ```js
@@ -4885,16 +4885,16 @@ function addLiquidity(uint amount0Desired, uint amount1Desired) public returns(u
 }
 ```
 
-接下来，我们需要实现移除流动性的功能。当用户从池子中移除流动性 $\Delta{L}$ 时，合约要销毁LP份额代币，并按比例将代币返还给用户。返还代币的计算公式如下:
+接下来，我们需要实现移除流动性的功能。当用户从池子中移除流动性 $\Delta{L}$ 时，合约要销毁 LP 份额代币，并按比例将代币返还给用户。返还代币的计算公式如下:
 
-接下来，我们需要实现移除流动性的功能。当用户从池子中移除流动性 $\Delta{L}$ 时，合约要销毁LP份额代币，并按比例将代币返还给用户。返还代币的计算公式如下:
+接下来，我们需要实现移除流动性的功能。当用户从池子中移除流动性 $\Delta{L}$ 时，合约要销毁 LP 份额代币，并按比例将代币返还给用户。返还代币的计算公式如下:
 
 下面的 `removeLiquidity()` 函数实现移除流动性的功能，主要步骤如下：
 
 1. 获取合约中的代币余额。
-2. 按LP的比例计算要转出的代币数量。
+2. 按 LP 的比例计算要转出的代币数量。
 3. 检查代币数量。
-4. 销毁LP份额。
+4. 销毁 LP 份额。
 5. 将相应的代币转账给用户。
 6. 更新储备量。
 7. 释放 `Burn` 事件。
@@ -4930,7 +4930,7 @@ function removeLiquidity(uint liquidity) external returns (uint amount0, uint am
 
 #### 交易
 
-在Swap合约中，用户可以使用一种代币交易另一种。那么我用 $\Delta{x}$单位的 token0，可以交换多少单位的 token1 呢？下面我们来简单推导一下。
+在 Swap 合约中，用户可以使用一种代币交易另一种。那么我用 $\Delta{x}$单位的 token0，可以交换多少单位的 token1 呢？下面我们来简单推导一下。
 
 根据恒定乘积公式，交易前：
 
@@ -5176,27 +5176,27 @@ contract SimpleSwap is ERC20 {
 
 ## 27. 闪电贷
 
-“闪电贷攻击”这个词大家一定听说过，但是什么是闪电贷？如何编写闪电贷合约？这一讲，我们将介绍区块链中的闪电贷，实现基于Uniswap V2，Uniswap V3，和AAVE V3的闪电贷合约，并使用Foundry进行测试。
+“闪电贷攻击”这个词大家一定听说过，但是什么是闪电贷？如何编写闪电贷合约？这一讲，我们将介绍区块链中的闪电贷，实现基于 Uniswap V2，Uniswap V3，和 AAVE V3 的闪电贷合约，并使用 Foundry 进行测试。
 
 ### 闪电贷
 
-你第一次听说"闪电贷"一定是在Web3，因为Web2没有这个东西。闪电贷（Flashloan）是DeFi的一种创新，它允许用户在一个交易中借出并迅速归还资金，而无需提供任何抵押。
+你第一次听说"闪电贷"一定是在 Web3，因为 Web2 没有这个东西。闪电贷（Flashloan）是 DeFi 的一种创新，它允许用户在一个交易中借出并迅速归还资金，而无需提供任何抵押。
 
-想象一下，你突然在市场中发现了一个套利机会，但是需要准备100万u的资金才能完成套利。在Web2，你去银行申请贷款，需要审批，很可能错过套利的机会。另外，如果套利失败，你不光要支付利息，还需要归还损失的本金。
+想象一下，你突然在市场中发现了一个套利机会，但是需要准备 100 万 u 的资金才能完成套利。在 Web2，你去银行申请贷款，需要审批，很可能错过套利的机会。另外，如果套利失败，你不光要支付利息，还需要归还损失的本金。
 
-而在Web3，你可以在DeFI平台（Uniswap，AAVE，Dodo）中进行闪电贷获取资金，就可以在无担保的情况下借100万u的代币，执行链上套利，最后再归还贷款和利息。
+而在 Web3，你可以在 DeFI 平台（Uniswap，AAVE，Dodo）中进行闪电贷获取资金，就可以在无担保的情况下借 100 万 u 的代币，执行链上套利，最后再归还贷款和利息。
 
-闪电贷利用了以太坊交易的原子性：一个交易（包括其中的所有操作）要么完全执行，要么完全不执行。如果一个用户尝试使用闪电贷并在同一个交易中没有归还资金，那么整个交易都会失败并被回滚，就像它从未发生过一样。因此，DeFi平台不需要担心借款人还不上款，因为还不上的话就意味着钱没借出去；同时，借款人也不用担心套利不成功，因为套利不成功的话就还不上款，也就意味着借钱没成功。
+闪电贷利用了以太坊交易的原子性：一个交易（包括其中的所有操作）要么完全执行，要么完全不执行。如果一个用户尝试使用闪电贷并在同一个交易中没有归还资金，那么整个交易都会失败并被回滚，就像它从未发生过一样。因此，DeFi 平台不需要担心借款人还不上款，因为还不上的话就意味着钱没借出去；同时，借款人也不用担心套利不成功，因为套利不成功的话就还不上款，也就意味着借钱没成功。
 
 ![](../pic/solidity-27-1.png)
 
 ### 闪电贷实战
 
-下面，我们分别介绍如何在Uniswap V2，Uniswap V3，和AAVE V3的实现闪电贷合约。
+下面，我们分别介绍如何在 Uniswap V2，Uniswap V3，和 AAVE V3 的实现闪电贷合约。
 
-#### 1. Uniswap V2闪电贷
+#### 1. Uniswap V2 闪电贷
 
-[Uniswap V2 Pair](https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol#L159)合约的swap()函数支持闪电贷。与闪电贷业务相关的代码如下：
+[Uniswap V2 Pair](https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol#L159)合约的 swap()函数支持闪电贷。与闪电贷业务相关的代码如下：
 
 ```js
 function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock {
@@ -5224,9 +5224,9 @@ function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data)
 
 下面，我们完成闪电贷合约`UniswapV2Flashloan.sol`。我们让它继承`IUniswapV2Callee`，并将闪电贷的核心逻辑写在回调函数`uniswapV2Call`中。
 
-整体逻辑很简单，在闪电贷函数`flashloan()`中，我们从Uniswap V2的`WETH-DAI`池子借`WETH`。触发闪电贷之后，回调函数`uniswapV2Call`会被Pair合约调用，我们不进行套利，仅在计算利息后归还闪电贷。Uniswap V2闪电贷的利息为每笔`0.3%`。
+整体逻辑很简单，在闪电贷函数`flashloan()`中，我们从 Uniswap V2 的`WETH-DAI`池子借`WETH`。触发闪电贷之后，回调函数`uniswapV2Call`会被 Pair 合约调用，我们不进行套利，仅在计算利息后归还闪电贷。Uniswap V2 闪电贷的利息为每笔`0.3%`。
 
-**注意**：回调函数一定要做好权限控制，确保只有Uniswap的Pair合约可以调用，否则的话合约中的资金会被黑客盗光。
+**注意**：回调函数一定要做好权限控制，确保只有 Uniswap 的 Pair 合约可以调用，否则的话合约中的资金会被黑客盗光。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -5296,7 +5296,7 @@ contract UniswapV2Flashloan is IUniswapV2Callee {
 }
 ```
 
-Foundry测试合约`UniswapV2Flashloan.t.sol`：
+Foundry 测试合约`UniswapV2Flashloan.t.sol`：
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -5339,16 +5339,16 @@ contract UniswapV2FlashloanTest is Test {
 }
 ```
 
-在测试合约中，我们分别测试了手续费充足和不足的情况，你可以在安装Foundry后使用下面的命令行进行测试（你可以将RPC换成其他以太坊RPC）：
+在测试合约中，我们分别测试了手续费充足和不足的情况，你可以在安装 Foundry 后使用下面的命令行进行测试（你可以将 RPC 换成其他以太坊 RPC）：
 
 ```shell
 FORK_URL=https://singapore.rpc.blxrbdn.com
 forge test  --fork-url $FORK_URL --match-path test/UniswapV2Flashloan.t.sol -vv
 ```
 
-#### 2. Uniswap V3闪电贷
+#### 2. Uniswap V3 闪电贷
 
-与Uniswap V2在`swap()`交换函数中间接支持闪电贷不同，Uniswap V3在[Pool池合约](https://github.com/Uniswap/v3-core/blob/main/contracts/UniswapV3Pool.sol#L791C1-L835C1)中加入了`flash()`函数直接支持闪电贷，核心代码如下：
+与 Uniswap V2 在`swap()`交换函数中间接支持闪电贷不同，Uniswap V3 在[Pool 池合约](https://github.com/Uniswap/v3-core/blob/main/contracts/UniswapV3Pool.sol#L791C1-L835C1)中加入了`flash()`函数直接支持闪电贷，核心代码如下：
 
 ```js
 function flash(
@@ -5382,9 +5382,9 @@ function flash(
 
 下面，我们完成闪电贷合约`UniswapV3Flashloan.sol`。我们让它继承`IUniswapV3FlashCallback`，并将闪电贷的核心逻辑写在回调函数`uniswapV3FlashCallback`中。
 
-整体逻辑与V2的类似，在闪电贷函数`flashloan()`中，我们从Uniswap V3的`WETH-DAI`池子借`WETH`。触发闪电贷之后，回调函数`uniswapV3FlashCallback`会被Pool合约调用，我们不进行套利，仅在计算利息后归还闪电贷。Uniswap V3每笔闪电贷的手续费与交易手续费一致。
+整体逻辑与 V2 的类似，在闪电贷函数`flashloan()`中，我们从 Uniswap V3 的`WETH-DAI`池子借`WETH`。触发闪电贷之后，回调函数`uniswapV3FlashCallback`会被 Pool 合约调用，我们不进行套利，仅在计算利息后归还闪电贷。Uniswap V3 每笔闪电贷的手续费与交易手续费一致。
 
-**注意**：回调函数一定要做好权限控制，确保只有Uniswap的Pair合约可以调用，否则的话合约中的资金会被黑客盗光。
+**注意**：回调函数一定要做好权限控制，确保只有 Uniswap 的 Pair 合约可以调用，否则的话合约中的资金会被黑客盗光。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -5462,7 +5462,7 @@ contract UniswapV3Flashloan is IUniswapV3FlashCallback {
 }
 ```
 
-Foundry测试合约`UniswapV3Flashloan.t.sol`：
+Foundry 测试合约`UniswapV3Flashloan.t.sol`：
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -5508,22 +5508,22 @@ contract UniswapV2FlashloanTest is Test {
 }
 ```
 
-在测试合约中，我们分别测试了手续费充足和不足的情况，你可以在安装Foundry后使用下面的命令行进行测试（你可以将RPC换成其他以太坊RPC）：
+在测试合约中，我们分别测试了手续费充足和不足的情况，你可以在安装 Foundry 后使用下面的命令行进行测试（你可以将 RPC 换成其他以太坊 RPC）：
 
 ```shell
 FORK_URL=https://singapore.rpc.blxrbdn.com
 forge test  --fork-url $FORK_URL --match-path test/UniswapV3Flashloan.t.sol -vv
 ```
 
-#### 3. AAVE V3闪电贷
+#### 3. AAVE V3 闪电贷
 
-AAVE是去中心的借贷平台，它的[Pool合约](https://github.com/aave/aave-v3-core/blob/master/contracts/protocol/pool/Pool.sol#L424)通过`flashLoan()`和`flashLoanSimple()`两个函数支持单资产和多资产的闪电贷。这里，我们仅利用`flashLoan()`实现单个资产（`WETH`）的闪电贷。
+AAVE 是去中心的借贷平台，它的[Pool 合约](https://github.com/aave/aave-v3-core/blob/master/contracts/protocol/pool/Pool.sol#L424)通过`flashLoan()`和`flashLoanSimple()`两个函数支持单资产和多资产的闪电贷。这里，我们仅利用`flashLoan()`实现单个资产（`WETH`）的闪电贷。
 
 下面，我们完成闪电贷合约`AaveV3Flashloan.sol`。我们让它继承`IFlashLoanSimpleReceiver`，并将闪电贷的核心逻辑写在回调函数`executeOperation`中。
 
-整体逻辑与V2的类似，在闪电贷函数`flashloan()`中，我们从AAVE V3的`WETH`池子借`WETH`。触发闪电贷之后，回调函数`executeOperation`会被Pool合约调用，我们不进行套利，仅在计算利息后归还闪电贷。AAVE V3闪电贷的手续费默认为每笔`0.05%`，比Uniswap的要低。
+整体逻辑与 V2 的类似，在闪电贷函数`flashloan()`中，我们从 AAVE V3 的`WETH`池子借`WETH`。触发闪电贷之后，回调函数`executeOperation`会被 Pool 合约调用，我们不进行套利，仅在计算利息后归还闪电贷。AAVE V3 闪电贷的手续费默认为每笔`0.05%`，比 Uniswap 的要低。
 
-**注意**：回调函数一定要做好权限控制，确保只有AAVE的Pool合约可以调用，并且发起者是本合约，否则的话合约中的资金会被黑客盗光。
+**注意**：回调函数一定要做好权限控制，确保只有 AAVE 的 Pool 合约可以调用，并且发起者是本合约，否则的话合约中的资金会被黑客盗光。
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -5595,7 +5595,7 @@ contract AaveV3Flashloan {
 }
 ```
 
-Foundry测试合约`AaveV3Flashloan.t.sol`：
+Foundry 测试合约`AaveV3Flashloan.t.sol`：
 
 ```js
 // SPDX-License-Identifier: MIT
@@ -5638,7 +5638,7 @@ contract UniswapV2FlashloanTest is Test {
 }
 ```
 
-在测试合约中，我们分别测试了手续费充足和不足的情况，你可以在安装Foundry后使用下面的命令行进行测试（你可以将RPC换成其他以太坊RPC）：
+在测试合约中，我们分别测试了手续费充足和不足的情况，你可以在安装 Foundry 后使用下面的命令行进行测试（你可以将 RPC 换成其他以太坊 RPC）：
 
 ```shell
 FORK_URL=https://singapore.rpc.blxrbdn.com
