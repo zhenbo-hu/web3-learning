@@ -2,12 +2,14 @@
 
 ## 利用 foundry 开发 solidity 项目
 
-### 项目初始化
+### foundry 初始化
 
 ```shell
 # 利用foundry初始化整个项目
 forge init
 ```
+
+#### solidity lint
 
 ```shell
 # 初始化solhint 代码检查工具
@@ -87,3 +89,109 @@ forge create --rpc-url <your_rpc_url> \
 ```
 
 **注意**：一次只能部署一个合约
+
+## 利用 hardhat 开发 solidity 项目
+
+## hardhat 初始化
+
+```shell
+# 在项目空文件夹中
+npm init
+
+# 安装hardhat依赖
+npm install --save-dev hardhat
+
+# 初始化hardhat项目
+npx hardhat
+```
+
+[solidity lint](#solidity-lint)
+
+## hardhat 编译 & 测试
+
+```shell
+# 编译合约
+npx hardhat compile
+
+# 测试合约
+npx hardhat test
+```
+
+### 合约覆盖率
+
+利用[solidity-coverage](https://github.com/sc-forks/solidity-coverage)
+
+```shell
+npm install --save-dev solidity-coverage
+```
+
+在`hardhat.config.js`添加 plugin
+
+```json
+require('solidity-coverage')
+```
+
+```shell
+# 查看测试覆盖率，为保障合约安全，建议覆盖率100%
+npx hardhat coverage
+```
+
+可以通过`coverage/index.html`查看具体结果，例[index.html](index.html)
+
+## hardhat 部署
+
+在`ignition/modules`文件夹下实现对应合约的部署代码，如
+
+```js
+const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
+
+const JAN_1ST_2030 = 1893456000;
+const ONE_GWEI = 1_000_000_000n;
+
+module.exports = buildModule("LockModule", (m) => {
+  const unlockTime = m.getParameter("unlockTime", JAN_1ST_2030);
+  const lockedAmount = m.getParameter("lockedAmount", ONE_GWEI);
+
+  const lock = m.contract("Lock", [unlockTime], {
+    value: lockedAmount,
+  });
+
+  return { lock };
+});
+```
+
+部署:
+
+```shell
+npx hardhat ignition deploy ./ignition/modules/Lock.js
+```
+
+通过 hardhat 启动一个本地以太坊节点，用于本地测试
+
+```shell
+npx hardhat node
+```
+
+部署到本地节点
+
+```shell
+npx hardhat ignition deploy ./ignition/modules/Lock.js --network localhost
+```
+
+通过修改`hardhat.config.js`中的 networks，添加或修改需要部署的区块链网络，如
+
+```json
+networks: {
+    polygon: {
+      url: "https://polygon.llamarpc.com",
+      accounts: [POLYGON_API_KEY],
+      chainId: 137,
+    },
+  }
+```
+
+部署到 polygon 网络
+
+```shell
+npx hardhat ignition deploy ./ignition/modules/Lock.js --network polygon
+```
