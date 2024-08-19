@@ -588,6 +588,1094 @@ contract ExpectEmit {
 
 换句话说，`test_ExpectEmit_DoNotCheckData` 是一个有效的测试用例，即使数量不同，因为我们不检查数据。
 
+### Forge 标准库概览
+
+Forge Standard Library（简称 Forge Std）是一个有用的合约集合，可以让编写测试更简单、更快速、更人性化。
+
+使用 Forge Std 是使用 Foundry 编写测试的首选方式。
+
+它提供了开始编写测试所需的所有基本功能：
+
+- `Vm.sol`：最新的作弊码接口
+- `console.sol` 和 `console2.sol`：Hardhat 风格的日志记录功能
+- `Script.sol`：Solidity 脚本 的基本实用程序
+- `Test.sol`：DSTest 的超集，包含标准库、作弊码实例 (`vm`) 和 Hardhat 控制台
+
+导入 `Test.sol` 并在测试合约中继承 `Test` ：
+
+```solidity
+import "forge-std/Test.sol";
+
+contract ContractTest is Test { ...
+```
+
+现在你可以：
+
+```solidity
+// Access Hevm via the `vm` instance
+vm.startPrank(alice);
+
+// Assert and log using Dappsys Test
+assertEq(dai.balanceOf(alice), 10000e18);
+
+// Log with the Hardhat `console` (`console2`)
+console.log(alice.balance);
+
+// Use anything from the Forge Std std-libraries
+deal(address(dai), alice, 10000e18);
+```
+
+要单独导入 `Vm` 接口或 `console` 库：
+
+```solidity
+import "forge-std/Vm.sol";
+import "forge-std/console.sol";
+```
+
+**注意**： `console2.sol` 包含 `console.sol` 的补丁，允许 Forge 解码控制台调用的跟踪，但它与 Hardhat 不兼容。
+
+```solidity
+import "forge-std/console2.sol";
+```
+
+#### 标准库
+
+Forge Std 目前由六个标准库组成。
+
+##### Std Logs
+
+Std Logs 扩展了 `DSTest` 库中的日志记录事件。
+
+##### Std Assertions
+
+Std Assertions 扩展了 `DSTest` 库中的断言函数。
+
+##### Std Cheats
+
+Std Cheats 是 Forge 作弊码的包装器，使它们更安全地使用和改进 DX。
+
+你可以通过简单地在测试合约中调用它们来访问 Std Cheats，就像你调用任何其他内部函数一样：
+
+```solidity
+// set up a prank as Alice with 100 ETH balance
+hoax(alice, 100 ether);
+```
+
+##### Std Errors
+
+Std Errors 提供围绕常见内部 Solidity 错误 errors 和回退 reverts 的包装器。
+
+Std Errors 与 `expectRevert` 作弊码结合使用最有用，因为您不需要自己记住内部 Solidity panic codes。 请注意，您必须通过 `stdError` 访问它们，因为这是一个库。
+
+```solidity
+// expect an arithmetic error on the next call (e.g. underflow)
+vm.expectRevert(stdError.arithmeticError);
+```
+
+##### Std Storage
+
+Std Storage 使操作合约存储变得容易。 它可以找到并写入与特定变量关联的存储槽。
+
+`Test` 合约已经提供了一个 `StdStorage` 实例 `stdstore`，您可以通过它访问任何标准存储功能。 请注意，您必须先在测试合约中添加语句：`using stdStorage for StdStorage`。
+
+```solidity
+// find the variable `score` in the contract `game`
+// and change its value to 10
+stdstore
+    .target(address(game))
+    .sig(game.score.selector)
+    .checked_write(10);
+```
+
+##### Std Math
+
+Std Math 是一个库，其中包含 Solidity 中未提供的有用的数学函数。
+
+请注意，您必须通过 `stdMath` 访问它们，因为这是一个库。
+
+```solidity
+// get the absolute value of -10
+uint256 ten = stdMath.abs(-10)
+```
+
+### 理解跟踪(Traces)
+
+Forge 可以为失败的测试（`-vvv`）或所有测试（`-vvvv`）生成跟踪(Traces)。
+
+跟踪遵循相同的通用格式：
+
+```shell
+  [<Gas Usage>] <Contract>::<Function>(<Parameters>)
+    ├─ [<Gas Usage>] <Contract>::<Function>(<Parameters>)
+    │   └─ ← <Return Value>
+    └─ ← <Return Value>
+```
+
+每个跟踪可以有更多的子跟踪（subtraces），每个 subtraces 表示对合约的调用和返回值。
+
+如果您的终端支持颜色，跟踪也会有多种颜色：
+
+- **绿色**：对于不会 revert 的调用
+- **红色**：用于有 revert 的调用
+- **蓝色**：用于调用作弊码
+- **青色**：用于触发日志
+- **黄色**：用于合约部署
+
+Gas 使用量（标在方括号中）显示整个函数调用 Gas。 但是，您可能会注意到，有时一条 trace 的 Gas 使用量与其所有 subtraces 的 Gas 使用量和并不完全匹配：
+
+```shell
+  [24661] OwnerUpOnlyTest::testIncrementAsOwner()
+    ├─ [2262] OwnerUpOnly::count()
+    │   └─ ← 0
+    ├─ [20398] OwnerUpOnly::increment()
+    │   └─ ← ()
+    ├─ [262] OwnerUpOnly::count()
+    │   └─ ← 1
+    └─ ← ()
+```
+
+下落不明的 Gas 是由于调用之间发生的一些额外操作，例如算术和存储读/写。
+
+Forge 将尝试解码尽可能多的签名和值，但有时这是不可能的。 在这些情况下，Traces 将出现如下显示：
+
+```shell
+  [<Gas Usage>] <Address>::<Calldata>
+    └─ ← <Return Data>
+```
+
+### 分叉（Fork）测试
+
+Forge 支持使用两种不同的方法在分叉环境中进行测试：
+
+- [分叉模式（Forking Mode）](./foundry.md/#分叉模式) — 通过 `forge test --fork-url` 标志使用一个单独分叉进行所有测试
+- [分叉作弊码（Forking Cheatcodes）](./foundry.md/#分叉作弊码) — 通过 forking 作弊码 在 Solidity 测试代码中直接创建、选择和管理多个分叉
+
+使用哪种方法？ 分叉模式提供针对特定分叉环境运行整个测试套件，而分叉作弊码提供更大的灵活性和表现力，可以在测试中使用多个分叉。 您的特定用例和测试策略将有助于知晓使用哪种方法。
+
+#### 分叉模式
+
+要在分叉环境（例如分叉的以太坊主网）中运行所有测试，请通过 `--fork-url` 标志传递 RPC URL：
+
+```shell
+forge test --fork-url <your_rpc_url>
+```
+
+以下值会更改以反映分叉时链的值：
+
+- `block_number`
+- `chain_id`
+- `gas_limit`
+- `gas_price`
+- `block_base_fee_per_gas`
+- `block_coinbase`
+- `block_timestamp`
+- `block_difficulty`
+
+可以使用 `--fork-block-number` 指定要从中分叉的区块高度：
+
+```shell
+forge test --fork-url <your_rpc_url> --fork-block-number 1
+```
+
+当您需要与现有合约进行交互时，分叉特别有用。 您可以选择以这种方式进行集成测试，就好像您在实际网络上一样。
+
+#### 缓存（Caching）
+
+如果同时指定了 `--fork-url` 和 `--fork-block-number`，那么该块的数据将被缓存以供将来的测试运行。
+
+数据缓存在 `~/.foundry/cache/rpc/<chain name>/<block number>` 中。 要清除缓存，只需删除目录或运行 `forge clean`（删除所有构建工件和缓存目录）。
+
+也可以通过传递 `--no-storage-caching` 或通过配置 `no_storage_caching` 和 `foundry.toml` 完全忽略缓存 `rpc_storage_caching`。
+
+#### 已改进的跟踪 traces
+
+Forge 支持使用 Etherscan 在分叉环境中识别合约。
+
+要使用此功能，请通过 `--etherscan-api-key` 标志传递 Etherscan API 密钥：
+
+```shell
+forge test --fork-url <your_rpc_url> --etherscan-api-key <your_etherscan_api_key>
+```
+
+或者，您可以设置 `ETHERSCAN_API_KEY` 环境变量。
+
+### 分叉作弊码
+
+分叉作弊码允许您在 Solidity 测试代码中以编程方式进入分叉模式，而不是通过 forge CLI 参数配置分叉模式。 这些作弊码允许您在逐个测试的基础上使用分叉模式，并在测试中使用多个分叉，每个分叉都通过其自己唯一的 `uint256` 标识符进行识别。
+
+#### 用法
+
+重要的是要记住，*所有*测试函数都是隔离的，这意味着每个测试函数都使用 `setUp` 之后的*拷贝*状态执行，并在其自己的独立 EVM 中执行。
+
+因此，在 `setUp` 期间创建的分支可用于测试。 下面的代码示例使用 `createFork` 创建两个分叉，但没有在初始就选择一个。 每个 fork 都有一个唯一标识符 (`uint256 forkId`)，该标识符在首次创建时分配。
+
+通过将该 forkId 传递给 `selectFork` 来启用特定的分叉。
+
+`createSelectFork` 是 `createFork` 加上 `selectFork` 的单行代码。
+
+一次只能有一个活动分叉，当前活动分叉的标识符可以通过 `activeFork` 检索。
+
+类似于 `roll`，您可以使用 `rollFork` 设置分叉的 `block.number`。
+
+要了解选择分叉时会发生什么，了解分叉模式的一般工作方式很重要：
+
+每个分叉都是一个独立的 EVM，即所有分叉都使用完全独立的存储。 唯一的例外是 `msg.sender` 的状态和测试合约本身，它们在分叉更换中是持久的。 换句话说，在 fork A 处于活动状态（`selectFork(A)`）时所做的所有更改仅记录在 fork A 的存储中，如果选择了另一个 fork，则不可用。 但是，测试合约本身（变量）中记录的更改仍然可用，因为测试合约是一个 持久（persistent） 帐户。
+
+`selectFork` 作弊码将 remote 部分设置为分叉的数据源，但是 本地（_local_） 内存在分叉更换期间保持不变。 这也意味着可以使用任何分叉随时调用 selectFork，以设置 _remote_ 数据源。 但是，重要的是要记住上述 `读/写` 访问规则始终适用，这意味着 _写_ 在分叉更换中是持久的。
+
+#### 例子
+
+##### 创建和选择分叉
+
+```solidity
+contract ForkTest is Test {
+    // the identifiers of the forks
+    uint256 mainnetFork;
+    uint256 optimismFork;
+
+    //Access variables from .env file via vm.envString("varname")
+    //Replace ALCHEMY_KEY by your alchemy key or Etherscan key, change RPC url if need
+    //inside your .env file e.g:
+    //MAINNET_RPC_URL = 'https://eth-mainnet.g.alchemy.com/v2/ALCHEMY_KEY'
+    //string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
+    //string OPTIMISM_RPC_URL = vm.envString("OPTIMISM_RPC_URL");
+
+    // create two _different_ forks during setup
+    function setUp() public {
+        mainnetFork = vm.createFork(MAINNET_RPC_URL);
+        optimismFork = vm.createFork(OPTIMISM_RPC_URL);
+    }
+
+    // demonstrate fork ids are unique
+    function testForkIdDiffer() public {
+        assert(mainnetFork != optimismFork);
+    }
+
+    // select a specific fork
+    function testCanSelectFork() public {
+        // select the fork
+        vm.selectFork(mainnetFork);
+        assertEq(vm.activeFork(), mainnetFork);
+
+        // from here on data is fetched from the `mainnetFork` if the EVM requests it and written to the storage of `mainnetFork`
+    }
+
+    // manage multiple forks in the same test
+    function testCanSwitchForks() public {
+        vm.selectFork(mainnetFork);
+        assertEq(vm.activeFork(), mainnetFork);
+
+        vm.selectFork(optimismFork);
+        assertEq(vm.activeFork(), optimismFork);
+    }
+
+    // forks can be created at all times
+    function testCanCreateAndSelectForkInOneStep() public {
+        // creates a new fork and also selects it
+        uint256 anotherFork = vm.createSelectFork(MAINNET_RPC_URL);
+        assertEq(vm.activeFork(), anotherFork);
+    }
+
+    // set `block.number` of a fork
+    function testCanSetForkBlockNumber() public {
+        vm.selectFork(mainnetFork);
+        vm.rollFork(1_337_000);
+
+        assertEq(block.number, 1_337_000);
+    }
+}
+```
+
+##### 分离的和持久存储(storage)
+
+如前所述，每个分叉本质上都是一个独立的 EVM，具有独立的存储(storage)空间。
+
+选择分叉时，只有 `msg.sender` 和测试合约（`ForkTest`）的账户是持久的。 但是任何帐户都可以变成持久帐户：`makePersistent`。
+
+_persistent_ 帐户是唯一的， 即它存在于所有分叉上
+
+```solidity
+contract ForkTest is Test {
+    // the identifiers of the forks
+    uint256 mainnetFork;
+    uint256 optimismFork;
+
+    //Access variables from .env file via vm.envString("varname")
+    //Replace ALCHEMY_KEY by your alchemy key or Etherscan key, change RPC url if need
+    //inside your .env file e.g:
+    //MAINNET_RPC_URL = 'https://eth-mainnet.g.alchemy.com/v2/ALCHEMY_KEY'
+    //string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
+    //string OPTIMISM_RPC_URL = vm.envString("OPTIMISM_RPC_URL");
+
+    // create two _different_ forks during setup
+    function setUp() public {
+        mainnetFork = vm.createFork(MAINNET_RPC_URL);
+        optimismFork = vm.createFork(OPTIMISM_RPC_URL);
+    }
+
+    // creates a new contract while a fork is active
+    function testCreateContract() public {
+        vm.selectFork(mainnetFork);
+        assertEq(vm.activeFork(), mainnetFork);
+
+        // the new contract is written to `mainnetFork`'s storage
+        SimpleStorageContract simple = new SimpleStorageContract();
+
+        // and can be used as normal
+        simple.set(100);
+        assertEq(simple.value(), 100);
+
+        // after switching to another contract we still know `address(simple)` but the contract only lives in `mainnetFork`
+        vm.selectFork(optimismFork);
+
+        /* this call will therefore revert because `simple` now points to a contract that does not exist on the active fork
+        * it will produce following revert message:
+        *
+        * "Contract 0xCe71065D4017F316EC606Fe4422e11eB2c47c246 does not exist on active fork with id `1`
+        *       But exists on non active forks: `[0]`"
+        */
+        simple.value();
+    }
+
+     // creates a new _persistent_ contract while a fork is active
+     function testCreatePersistentContract() public {
+        vm.selectFork(mainnetFork);
+        SimpleStorageContract simple = new SimpleStorageContract();
+        simple.set(100);
+        assertEq(simple.value(), 100);
+
+        // mark the contract as persistent so it is also available when other forks are active
+        vm.makePersistent(address(simple));
+        assert(vm.isPersistent(address(simple)));
+
+        vm.selectFork(optimismFork);
+        assert(vm.isPersistent(address(simple)));
+
+        // This will succeed because the contract is now also available on the `optimismFork`
+        assertEq(simple.value(), 100);
+     }
+}
+
+contract SimpleStorageContract {
+    uint256 public value;
+
+    function set(uint256 _value) public {
+        value = _value;
+    }
+}
+```
+
+## Foundry 高级测试
+
+### 模糊测试(Fuzz Testing)
+
+Forge 支持基于属性的测试。
+
+基于属性的测试是一种测试一般行为而不是孤立场景的方法。
+
+让我们通过编写单元测试来检查这意味着什么，找到我们正在测试的一般属性，并将其转换为基于属性的测试：
+
+```solidity
+pragma solidity 0.8.10;
+
+import "forge-std/Test.sol";
+
+contract Safe {
+    receive() external payable {}
+
+    function withdraw() external {
+        payable(msg.sender).transfer(address(this).balance);
+    }
+}
+
+contract SafeTest is Test {
+    Safe safe;
+
+    // Needed so the test contract itself can receive ether
+    // when withdrawing
+    receive() external payable {}
+
+    function setUp() public {
+        safe = new Safe();
+    }
+
+    function testWithdraw() public {
+        payable(address(safe)).transfer(1 ether);
+        uint256 preBalance = address(this).balance;
+        safe.withdraw();
+        uint256 postBalance = address(this).balance;
+        assertEq(preBalance + 1 ether, postBalance);
+    }
+}
+```
+
+运行测试，我们看到它通过了：
+
+```shell
+$ forge test
+Compiling 6 files with 0.8.10
+Solc 0.8.10 finished in 3.78s
+Compiler run successful
+
+Running 1 test for test/Safe.t.sol:SafeTest
+[PASS] testWithdraw() (gas: 19462)
+Test result: ok. 1 passed; 0 failed; finished in 873.70µs
+```
+
+这个单元测试*确实测试*我们可以从我们的保险箱（Safe 合约）中取出以太币。 但是，谁能说它适用于所有金额，而不仅仅是 1 个以太币？
+
+这里的一般性质是：给定一个安全的余额，当我们提取时，我们应该得到保险箱里的所有的资金。
+
+Forge 将运行任何至少采用一个参数的测试作为基于属性的测试，所以让我们重写：
+
+```solidity
+contract SafeTest is Test {
+    // ...
+
+    function testWithdraw(uint256 amount) public {
+        payable(address(safe)).transfer(amount);
+        uint256 preBalance = address(this).balance;
+        safe.withdraw();
+        uint256 postBalance = address(this).balance;
+        assertEq(preBalance + amount, postBalance);
+    }
+}
+```
+
+如果我们现在运行测试，我们可以看到 Forge 运行基于属性的测试，但它因 amount 的高值而失败：
+
+```shell
+$ forge test
+Compiling 1 files with 0.8.10
+Solc 0.8.10 finished in 1.69s
+Compiler run successful
+
+Running 1 test for test/Safe.t.sol:SafeTest
+[FAIL. Reason: EvmError: Revert Counterexample: calldata=0x215a2f200000000000000000000000000000000000000001000000000000000000000000, args=[79228162514264337593543950336]] testWithdraw(uint256) (runs: 47, μ: 19554, ~: 19554)
+Test result: FAILED. 0 passed; 1 failed; finished in 8.75ms
+```
+
+给测试合约的默认以太币数量是 `2**96 wei`（在 DappTools 中），所以我们必须将 amount 类型限制为 `uint96` ，以确保我们不会尝试发送超过`uint96`的值， 我们使用参数：
+
+```solidity
+    function testWithdraw(uint96 amount) public {
+```
+
+现在它通过了：
+
+```shell
+$ forge test
+Compiling 1 files with 0.8.10
+Solc 0.8.10 finished in 1.67s
+Compiler run successful
+
+Running 1 test for test/Safe.t.sol:SafeTest
+[PASS] testWithdraw(uint96) (runs: 256, μ: 19078, ~: 19654)
+Test result: ok. 1 passed; 0 failed; finished in 19.56ms
+```
+
+您可能希望使用 `assume` 作弊码排除某些情况。 在这些情况下，模糊器 fuzzer 将丢弃输入并开始运行新的模糊测试：
+
+```solidity
+function testFuzz_Withdraw(uint96 amount) public {
+    vm.assume(amount > 0.1 ether);
+    // snip
+}
+```
+
+有多种方法可以运行基于属性的测试，特别是参数测试和模糊测试。 Forge 仅支持模糊测试。
+
+#### 解读结果
+
+您可能已经注意到，与单元测试相比，模糊测试的总结略有不同：
+
+- "runs" 是指模糊器 fuzzer 测试的场景数量。 默认情况下，模糊器 fuzzer 将生成 256 个场景，但用户可以设置此参数以及其他测试执行参数。
+- "μ"（希腊字母 mu）是所有模糊运行中使用的平均 Gas
+- "~"（波浪号）是所有模糊运行中使用的中值 Gas
+
+#### 配置模糊测试执行
+
+模糊测试执行受用户通过 Forge 配置原语控制的参数的约束。配置可以全局应用，也可以基于每个测试进行应用。
+
+### 不变性测试
+
+#### 概述
+
+不变性测试允许针对预定义合约的预定义函数调用的随机序列测试一组不变性表达式。在执行每个函数调用后，会对所有定义的不变性进行断言。
+
+不变性测试是暴露协议中不正确逻辑的强大工具。由于函数调用序列是随机的，并且具有模糊输入，不变性测试可以暴露边缘情况和高度复杂协议状态中的错误假设和不正确逻辑。
+
+不变性测试活动有两个维度，即 `runs` 和 `depth`：
+
+- `runs`：生成和运行函数调用序列的次数。
+- `depth`：在给定的 `run` 中进行的函数调用次数。在进行每个函数调用后，都会对所有定义的不变性进行断言。如果函数调用回滚，则 `depth` 计数器仍会递增。
+
+与在 Foundry 中运行标准测试的方式类似，通过在函数名前加上 `test` 前缀来运行不变性测试，通过在函数名前加上 `invariant` 前缀来表示不变性测试（例如，`function invariant_A()`）。
+
+##### 配置不变性测试执行
+
+不变性测试执行由用户可以通过 Forge 配置基元控制的参数来管理。配置可以全局应用或针对每个测试进行应用。
+
+#### 定义不变性
+
+不变性是应该在模糊测试活动期间始终成立的条件表达式。一个良好的不变性测试套件应该尽可能多地包含不变性，并且可以针对不同的协议状态具有不同的测试套件。
+
+不变性的示例包括：
+
+- 对于 Uniswap，“xy=k 公式始终成立”。
+- 对于 ERC-20 代币，“所有用户余额的总和等于总供应量”。
+
+有不同的方法来断言不变性，如下表所述：
+
+| 类型                   | 解释                                                                     | 示例                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| 直接断言               | 查询协议智能合约并断言值是否符合预期。                                   | `assertGe(`<br>&emsp;`token.totalAssets(),`<br>&emsp;`token.totalSupply()`<br>`)`         |
+| 幽灵变量断言           | 查询协议智能合约并将其与在测试环境中持久化的值（幽灵变量）进行比较。     | `assertEq(`<br>&emsp;`token.totalSupply(),`<br>&emsp;`sumBalanceOf`<br>`)`                |
+| 去优化（天真实现断言） | 查询协议智能合约并将其与相同期望逻辑的天真且通常高度耗气的实现进行比较。 | `assertEq(`<br>&emsp;`pool.outstandingInterest(),`<br>&emsp;`test.naiveInterest()`<br>`)` |
+
+##### 条件不变性
+
+不变性必须在给定模糊测试活动期间始终成立，但这并不意味着它们在每种情况下都必须成立。在特定情况下（例如，在清算期间）可能会引入/移除某些不变性。
+
+不建议在不变性断言中引入条件逻辑，因为它们可能会因为不正确的代码路径而引入错误的阳性结果。例如：
+
+```solidity
+function invariant_example() external {
+    if (protocolCondition) return;
+
+    assertEq(val1, val2);
+}
+```
+
+在这种情况下，如果 `protocolCondition == true`，则根本不会断言不变性。有时这可能是期望的行为，但如果 `protocolCondition` 意外地在整个模糊测试活动期间为 `true`，或者条件本身存在逻辑错误，则可能会引发问题。因此，最好尝试为该条件定义另一个不变性，例如：
+
+```solidity
+function invariant_example() external {
+    if (protocolCondition) {
+        assertLe(val1, val2);
+        return;
+    };
+
+    assertEq(val1, val2);
+}
+```
+
+处理协议状态下不同不变性的另一种方法是利用不同场景的专用不变性测试合约。这些场景可以使用 `setUp` 函数进行引导，但更强大的方法是利用 _不变性目标_ 来控制模糊器的行为，从而仅产生特定结果（例如，避免清算）。
+
+#### 不变性目标
+
+**目标合约**：在给定的不变性测试模糊活动期间将被调用的合约集。这组合约默认为在 `setUp` 函数中部署的所有合约，但可以进行定制以允许更高级的不变性测试。
+
+**目标发送方**：不变性测试模糊器默认情况下会随机选择 `msg.sender` 的值进行模糊测试活动，以模拟系统中的多个参与者。如果需要，可以在 `setUp` 函数中定制发送方集。
+
+**目标选择器**：用于不变性测试的模糊器的函数选择器集。这些可以用于在给定目标合约中使用函数的子集。
+
+**目标工件**：要用于给定合约的期望 ABI。这些可以用于代理合约配置。
+
+**目标工件选择器**：要在给定合约的给定 ABI 中使用的函数选择器的期望子集。这些可以用于代理合约配置。
+
+在目标冲突的情况下，不变性模糊器的优先级为：
+
+`目标选择器 | 目标工件选择器 > 排除合约 | 排除工件 > 目标合约 | 目标工件`
+
+##### 函数调用概率分布
+
+这些合约的函数将以随机方式进行模糊测试活动。函数被调用的概率按合约和函数进行了详细说明。
+
+例如：
+
+```shell
+targetContract1: 50%
+├─ function1: 50% (25%)
+└─ function2: 50% (25%)
+
+targetContract2: 50%
+├─ function1: 25% (12.5%)
+├─ function2: 25% (12.5%)
+├─ function3: 25% (12.5%)
+└─ function4: 25% (12.5%)
+```
+
+在设计目标合约时需要注意这一点，因为函数较少的目标合约由于这种概率分布，每个函数被调用的次数会更多。
+
+##### 不变性测试辅助函数
+
+不变性测试辅助函数包含在 `forge-std` 中，以允许可配置的不变性测试设置。以下是这些辅助函数的概述：
+
+| 函数                                                                       | 描述                                                                                                          |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `excludeContract(address newExcludedContract_)`                            | 将给定地址添加到 `_excludedContracts` 数组中。这组合约明确地从目标合约中排除。                                |
+| `excludeSender(address newExcludedSender_)`                                | 将给定地址添加到 `_excludedSenders` 数组中。这组地址明确地从目标发送方中排除。                                |
+| `excludeArtifact(string memory newExcludedArtifact_)`                      | 将给定字符串添加到 `_excludedArtifacts` 数组中。这组字符串明确地从目标工件中排除。                            |
+| `targetArtifact(string memory newTargetedArtifact_)`                       | 将给定字符串添加到 `_targetedArtifacts` 数组中。这组字符串用于目标工件。                                      |
+| `targetArtifactSelector(FuzzSelector memory newTargetedArtifactSelector_)` | 将给定的 `FuzzSelector` 添加到 `_targetedArtifactSelectors` 数组中。这组 `FuzzSelector` 用于目标工件选择器。  |
+| `targetContract(address newTargetedContract_)`                             | 将给定地址添加到 `_targetedContracts` 数组中。这组地址用于目标合约。该数组会覆盖在 `setUp` 期间部署的合约集。 |
+| `targetSelector(FuzzSelector memory newTargetedSelector_)`                 | 将给定的 `FuzzSelector` 添加到 `_targetedSelectors` 数组中。这组 `FuzzSelector` 用于目标合约选择器。          |
+| `targetSender(address newTargetedSender_)`                                 | 将给定地址添加到 `_targetedSenders` 数组中。这组地址用于目标发送方。                                          |
+
+##### 目标合约设置
+
+可以使用以下三种方法设置目标合约：
+
+1. 手动添加到 `targetContracts` 数组中的合约将被添加到目标合约集合中。
+2. 在 `setUp` 函数中部署的合约将自动添加到目标合约集合中（仅在没有使用选项 1 手动添加合约时有效）。
+3. 在 `setUp` 中部署的合约可以从目标合约中 **移除** ，如果它们被添加到 `excludeContracts` 数组中。
+
+#### 开放测试
+
+目标合约的默认配置设置为在设置期间部署的所有合约。对于较小的模块和更多的算术合约，这种方法效果很好。例如：
+
+```solidity
+contract ExampleContract1 {
+
+    uint256 public val1;
+    uint256 public val2;
+    uint256 public val3;
+
+    function addToA(uint256 amount) external {
+        val1 += amount;
+        val3 += amount;
+    }
+
+    function addToB(uint256 amount) external {
+        val2 += amount;
+        val3 += amount;
+    }
+
+}
+```
+
+可以使用默认目标合约模式部署和测试此合约：
+
+```solidity
+contract InvariantExample1 is Test {
+
+    ExampleContract1 foo;
+
+    function setUp() external {
+        foo = new ExampleContract1();
+    }
+
+    function invariant_A() external {
+        assertEq(foo.val1() + foo.val2(), foo.val3());
+    }
+
+    function invariant_B() external {
+        assertGe(foo.val1() + foo.val2(), foo.val1());
+    }
+
+}
+```
+
+此设置将使用模糊输入以 50%-50%的概率分布调用`foo.addToA()`和`foo.addToB()`。不可避免地，输入将开始引起溢出，并且函数调用将开始回滚。由于不变量测试中的默认配置为`fail_on_revert = false`，这不会导致测试失败。不变量将在模糊测试活动的其余过程中保持不变，测试将通过。输出将类似于：
+
+```shell
+[PASS] invariant_A() (runs: 50, calls: 10000, reverts: 5533)
+[PASS] invariant_B() (runs: 50, calls: 10000, reverts: 5533)
+```
+
+#### 基于处理程序的测试
+
+对于更复杂和集成的协议，需要更复杂的目标合约使用方式才能实现期望的结果。为了说明如何利用处理程序，将使用以下合约（接受另一个 ERC-20 代币存款的基于 ERC-4626 的合约）：
+
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.17;
+
+interface IERC20Like {
+
+    function balanceOf(address owner_) external view returns (uint256 balance_);
+
+    function transferFrom(
+        address owner_,
+        address recipient_,
+        uint256 amount_
+    ) external returns (bool success_);
+
+}
+
+contract Basic4626Deposit {
+
+    /**********************************************************************************************/
+    /*** Storage                                                                                ***/
+    /**********************************************************************************************/
+
+    address public immutable asset;
+
+    string public name;
+    string public symbol;
+
+    uint8 public immutable decimals;
+
+    uint256 public totalSupply;
+
+    mapping(address => uint256) public balanceOf;
+
+    /**********************************************************************************************/
+    /*** Constructor                                                                            ***/
+    /**********************************************************************************************/
+
+    constructor(address asset_, string memory name_, string memory symbol_, uint8 decimals_) {
+        asset    = asset_;
+        name     = name_;
+        symbol   = symbol_;
+        decimals = decimals_;
+    }
+
+    /**********************************************************************************************/
+    /*** External Functions                                                                     ***/
+    /**********************************************************************************************/
+
+    function deposit(uint256 assets_, address receiver_) external returns (uint256 shares_) {
+        shares_ = convertToShares(assets_);
+
+        require(receiver_ != address(0), "ZERO_RECEIVER");
+        require(shares_   != uint256(0), "ZERO_SHARES");
+        require(assets_   != uint256(0), "ZERO_ASSETS");
+
+        totalSupply += shares_;
+
+        // Cannot overflow because totalSupply would first overflow in the statement above.
+        unchecked { balanceOf[receiver_] += shares_; }
+
+        require(
+            IERC20Like(asset).transferFrom(msg.sender, address(this), assets_),
+            "TRANSFER_FROM"
+        );
+    }
+
+    function transfer(address recipient_, uint256 amount_) external returns (bool success_) {
+        balanceOf[msg.sender] -= amount_;
+
+        // Cannot overflow because minting prevents overflow of totalSupply,
+        // and sum of user balances == totalSupply.
+        unchecked { balanceOf[recipient_] += amount_; }
+
+        return true;
+    }
+
+    /**********************************************************************************************/
+    /*** Public View Functions                                                                  ***/
+    /**********************************************************************************************/
+
+    function convertToShares(uint256 assets_) public view returns (uint256 shares_) {
+        uint256 supply_ = totalSupply;  // Cache to stack.
+
+        shares_ = supply_ == 0 ? assets_ : (assets_ * supply_) / totalAssets();
+    }
+
+    function totalAssets() public view returns (uint256 assets_) {
+        assets_ = IERC20Like(asset).balanceOf(address(this));
+    }
+
+}
+```
+
+##### 处理程序函数
+
+此合约的 `deposit` 函数要求调用者具有 ERC-20 `asset` 的非零余额。在开放不变量测试方法中，将使用 50-50%的分布调用 `deposit()` 和 `transfer()`，但它们将在每次调用时回滚。这将导致不变量测试“通过”，但实际上在所需的合约中根本没有操作状态。这就是可以利用目标合约的地方。当合约需要一些额外逻辑以使其正常运行时，可以将其添加到名为 `处理程序` 的专用合约中。
+
+```solidity
+function deposit(uint256 assets) public virtual {
+    asset.mint(address(this), assets);
+
+    asset.approve(address(token), assets);
+
+    uint256 shares = token.deposit(assets, address(this));
+}
+```
+
+此合约将在进行函数调用之前提供必要的设置，以确保其成功。
+
+基于此概念，处理程序可用于开发更复杂的不变量测试。在开放不变量测试中，测试将如下图所示运行，直接对协议合约进行具有模糊参数的随机序列的函数调用。这将导致更复杂系统的回滚，如上文所述。
+
+![](../../pic/foundry-1.svg)
+
+通过手动将所有处理程序合约添加到 `targetContracts` 数组中，可以以由处理程序管理的方式进行对协议合约的所有函数调用。这在下图中有详细说明。
+
+![](../../pic/foundry-2.svg)
+
+通过在模糊器和协议之间增加此层，可以实现更强大的测试。
+
+##### 处理程序幽灵变量
+
+在处理程序中，可以跟踪 “幽灵变量”，以在多个函数调用中添加额外信息以进行不变量测试。一个很好的例子是在上述存入 ERC-4626 代币后对每个 LP 拥有的所有 `shares` 进行求和，并在不变量中使用（ `totalSupply == sumBalanceOf`）。
+
+```solidity
+function deposit(uint256 assets) public virtual {
+    asset.mint(address(this), assets);
+
+    asset.approve(address(token), assets);
+
+    uint256 shares = token.deposit(assets, address(this));
+
+    sumBalanceOf += shares;
+}
+```
+
+##### 函数级断言
+
+另一个好处是在函数调用发生时执行断言的能力。一个例子是在 `deposit` 函数调用期间断言 LP 的 ERC-20 余额减少了 `assets`，同时他们的 LP 代币余额增加了 `shares`。这样，处理程序函数类似于模糊测试，因为它们可以接受模糊输入，执行状态更改，并在状态更改前/后进行断言。
+
+```solidity
+function deposit(uint256 assets) public virtual {
+    asset.mint(address(this), assets);
+
+    asset.approve(address(token), assets);
+
+    uint256 beforeBalance = asset.balanceOf(address(this));
+
+    uint256 shares = token.deposit(assets, address(this));
+
+    assertEq(asset.balanceOf(address(this)), beforeBalance - assets);
+
+    sumBalanceOf += shares;
+}
+```
+
+##### 有界/无界函数
+
+此外，使用处理程序，可以将输入参数限定为合理预期的值，以便在 `foundry.toml` 中的 `fail_on_revert` 设置为 `true`。这可以通过 `forge-std` 中的 `bound()` 辅助函数来实现。这确保了模糊器进行的每个函数调用必须对协议成功才能使测试通过。这对于测试协议以期望的方式进行测试非常有用。
+
+```solidity
+function deposit(uint256 assets) external {
+    assets = bound(assets, 0, 1e30);
+
+    asset.mint(address(this), assets);
+
+    asset.approve(address(token), assets);
+
+    uint256 beforeBalance = asset.balanceOf(address(this));
+
+    uint256 shares = token.deposit(assets, address(this));
+
+    assertEq(asset.balanceOf(address(this)), beforeBalance - assets);
+
+    sumBalanceOf += shares;
+}
+```
+
+这也可以通过从专用的 “无界” 处理程序合约中继承非有界函数来实现，这些函数可用于 `fail_on_revert = false` 测试。这种类型的测试也很有用，因为它可以暴露对 `bound` 函数使用所做的假设的问题。
+
+```solidity
+// Unbounded
+function deposit(uint256 assets) public virtual {
+    asset.mint(address(this), assets);
+
+    asset.approve(address(token), assets);
+
+    uint256 beforeBalance = asset.balanceOf(address(this));
+
+    uint256 shares = token.deposit(assets, address(this));
+
+    assertEq(asset.balanceOf(address(this)), beforeBalance - assets);
+
+    sumBalanceOf += shares;
+}
+```
+
+```solidity
+// Bounded
+function deposit(uint256 assets) external {
+    assets = bound(assets, 0, 1e30);
+
+    super.deposit(assets);
+}
+```
+
+##### 操作者管理
+
+在上述函数调用中，可以看到 `address(this)` 是 ERC-4626 合约中唯一的存款人，这不是其预期用途的真实表示。通过在 `forge-std` 中利用 `prank` 作弊码，每个处理程序可以管理一组操作者，并使用它们从不同的 `msg.sender` 地址执行相同的函数调用。这可以通过以下修饰符实现：
+
+```solidity
+address[] public actors;
+
+address internal currentActor;
+
+modifier useActor(uint256 actorIndexSeed) {
+    currentActor = actors[bound(actorIndexSeed, 0, actors.length - 1)];
+    vm.startPrank(currentActor);
+    _;
+    vm.stopPrank();
+}
+```
+
+使用多个操作者还允许更精细的幽灵变量使用。这在下面的函数中进行了演示：
+
+```solidity
+// Unbounded
+function deposit(
+    uint256 assets,
+    uint256 actorIndexSeed
+) public virtual useActor(actorIndexSeed) {
+    asset.mint(currentActor, assets);
+
+    asset.approve(address(token), assets);
+
+    uint256 beforeBalance = asset.balanceOf(address(this));
+
+    uint256 shares = token.deposit(assets, address(this));
+
+    assertEq(asset.balanceOf(address(this)), beforeBalance - assets);
+
+    sumBalanceOf += shares;
+
+    sumDeposits[currentActor] += assets
+}
+```
+
+```solidity
+// Bounded
+function deposit(uint256 assets, uint256 actorIndexSeed) external {
+    assets = bound(assets, 0, 1e30);
+
+    super.deposit(assets, actorIndexSeed);
+}
+```
+
+### 差异测试
+
+Forge 可用于差异测试（differential testing）和差异模糊测试（differential fuzzing）。 您甚至可以使用 `ffi 作弊码` 针对非 EVM 可执行文件进行测试。
+
+#### 背景
+
+差异测试（Differential testing） 通过比较每个实现的输出来交叉引用同一功能的多个实现。 假设我们有一个函数规范 `F(X)`，以及该规范的两个实现：`f1(X)` 和 `f2(X)`。 对于存在于适当输入空间中的所有 `x`，我们期望 `f1(x) == f2(x)`。 如果 `f1(x) != f2(x)`，我们知道至少有一个函数错误地实现了 `F(X)`。 这种测试等效和识别差异的过程是差异测试的核心。
+
+差异模糊测试是差异测试的扩展。 差异模糊以编程方式生成许多 x 值，以发现手动选择的输入可能无法揭示的差异和边缘情况。
+
+**注意**：本例中的 `==` 运算符可以是等效性的自定义定义。例如，如果测试浮点实现，您可以使用具有一定公差的近似相等。
+
+这种类型的测试在现实生活中的一些用途包括：
+
+- 将升级后的实施与其之前版本进行比较
+- 针对已知参考实现测试代码
+- 确认与第三方工具和依赖项的兼容性
+
+以下是 Forge 如何用于差异测试的一些示例。
+
+#### 入门：ffi 作弊码
+
+`ffi` 允许您执行任意 shell 命令并捕获输出。 这是一个模拟示例：
+
+```solidity
+import "forge-std/Test.sol";
+
+contract TestContract is Test {
+
+    function testMyFFI () public {
+        string[] memory cmds = new string[](2);
+        cmds[0] = "cat";
+        cmds[1] = "address.txt"; // assume contains abi-encoded address.
+        bytes memory result = vm.ffi(cmds);
+        address loadedAddress = abi.decode(result, (address));
+        // Do something with the address
+        // ...
+    }
+}
+```
+
+一个地址之前已经写入了 `address.txt`，我们使用 FFI 作弊码读取了它。 现在可以在整个测试合约中使用此数据。
+
+#### 示例：差异测试默克尔树实现
+
+默克尔树 是区块链应用程序中经常使用的加密承诺方案。 它们的流行导致了默克尔树生成器、证明器和验证器的许多不同实现。 Merkle 根和证明通常使用 JavaScript 或 Python 等语言生成，而证明验证通常发生在 Solidity 的链上。
+
+Murky 是在 Solidity 中 Merkle 根、证明和验证的完整实现。 它的测试套件包括针对 OpenZeppelin 的 Merkle 证明库的差异测试，以及针对参考 JavaScript 实现的根生成测试。 这些测试由 Foundry 的模糊测试和`ffi`功能提供支持。
+
+##### 差异模糊测试参考 TypeScript 实现
+
+使用 `ffi` 作弊代码，Murky 使用 Forge 的模糊器提供的数据对比 TypeScript 实现测试自己的 Merkle 根实现：
+
+```solidity
+function testMerkleRootMatchesJSImplementationFuzzed(bytes32[] memory leaves) public {
+    vm.assume(leaves.length > 1);
+    bytes memory packed = abi.encodePacked(leaves);
+    string[] memory runJsInputs = new string[](8);
+
+    // Build ffi command string
+    runJsInputs[0] = 'npm';
+    runJsInputs[1] = '--prefix';
+    runJsInputs[2] = 'differential_testing/scripts/';
+    runJsInputs[3] = '--silent';
+    runJsInputs[4] = 'run';
+    runJsInputs[5] = 'generate-root-cli';
+    runJsInputs[6] = leaves.length.toString();
+    runJsInputs[7] = packed.toHexString();
+
+    // Run command and capture output
+    bytes memory jsResult = vm.ffi(runJsInputs);
+    bytes32 jsGeneratedRoot = abi.decode(jsResult, (bytes32));
+
+    // Calculate root using Murky
+    bytes32 murkyGeneratedRoot = m.getRoot(leaves);
+    assertEq(murkyGeneratedRoot, jsGeneratedRoot);
+}
+```
+
+Forge 运行 `npm --prefix differential_testing/scripts/ --silent run generate-root-cli {numLeaves} {hexEncodedLeaves}`。 这使用参考 JavaScript 实现计算输入数据的 Merkle 根。 该脚本将根打印到标准输出，打印输出在 `vm.ffi()` 的返回值中被捕获为 `bytes`。
+
+然后测试使用 Solidity 实现计算根。
+
+最后，测试断言两个根完全相等。 如果它们不相等，则测试失败。
+
+##### 针对 OpenZeppelin 的 Merkle 证明库的差异模糊测试
+
+您可能希望对另一个 Solidity 实现使用差异测试。 在这种情况下，不需要 `ffi`。 相反，只需要把参考实现直接导入到测试中。
+
+```solidity
+import "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
+//...
+function testCompatibilityOpenZeppelinProver(bytes32[] memory _data, uint256 node) public {
+    vm.assume(_data.length > 1);
+    vm.assume(node < _data.length);
+    bytes32 root = m.getRoot(_data);
+    bytes32[] memory proof = m.getProof(_data, node);
+    bytes32 valueToProve = _data[node];
+    bool murkyVerified = m.verifyProof(root, proof, valueToProve);
+    bool ozVerified = MerkleProof.verify(proof, root, valueToProve);
+    assertTrue(murkyVerified == ozVerified);
+}
+```
+
+##### 针对已知边缘情况的差异测试
+
+差异测试并不总是模糊的——它们对于测试已知的边缘情况也很有用。 在 Murky 代码库的情况下，`log2ceil` 函数的初始实现不适用于某些紧挨 2 的幂的长度（如 129）的数组。 作为安全检查，始终针对此长度的数组运行测试，并与 TypeScript 实现进行比较。
+
+##### 针对参考数据的标准化测试
+
+FFI 还可用于将可重现的标准化数据注入测试环境。 在 Murky 库中，这被用作 Gas 快照的基准。
+
+```solidity
+bytes32[100] data;
+uint256[8] leaves = [4, 8, 15, 16, 23, 42, 69, 88];
+
+function setUp() public {
+    string[] memory inputs = new string[](2);
+    inputs[0] = "cat";
+    inputs[1] = "src/test/standard_data/StandardInput.txt";
+    bytes memory result =  vm.ffi(inputs);
+    data = abi.decode(result, (bytes32[100]));
+    m = new Merkle();
+}
+
+function testMerkleGenerateProofStandard() public view {
+    bytes32[] memory _data = _getData();
+    for (uint i = 0; i < leaves.length; ++i) {
+        m.getProof(_data, leaves[i]);
+    }
+}
+```
+
+`src/test/standard_data/StandardInput.txt` 是一个包含编码的 `bytes32[100]` 数组的文本文件。 它是在测试之外生成的，可以在任何语言的 Web3 SDK 中使用。 它看起来像：
+
+```shell
+0xf910ccaa307836354233316666386231414464306335333243453944383735313..423532
+```
+
+标准化测试合约使用 ffi 读取文件。 它将数据解码为一个数组，然后在本例中为 8 个不同的叶子生成证明。 由于数据是恒定且标准的，我们可以使用此测试有意义地测量 Gas 和性能改进。
+
+**当然，可以将数组硬编码到测试中！ 但这使得跨合约、实现等进行一致的测试变得更加困难。**
+
 ## 相关资料
 
 - [官方文档](https://book.getfoundry.sh/)
