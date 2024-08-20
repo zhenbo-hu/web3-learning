@@ -1,5 +1,7 @@
 # solidity
 
+[solidity 最佳实践](best_practice.md)
+
 1. [solidity 基础](./basic.md)
 2. [solidity 进阶](./advance.md)
 3. [solidity 应用](./application.md)
